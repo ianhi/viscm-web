@@ -59,9 +59,13 @@ export async function loadViscmTestImage(): Promise<{ width: number; height: num
       elevationData.push(values);
     }
     
-    // Calculate normalization range
-    const minElev = Math.min(...validValues);
-    const maxElev = Math.max(...validValues);
+    // Calculate normalization range (avoid stack overflow with large arrays)
+    let minElev = validValues[0];
+    let maxElev = validValues[0];
+    for (const val of validValues) {
+      if (val < minElev) minElev = val;
+      if (val > maxElev) maxElev = val;
+    }
     const range = maxElev - minElev;
     
     console.log(`Elevation range: ${minElev} to ${maxElev} meters`);

@@ -18,6 +18,7 @@ import { simulate } from '@bjornlu/colorblind';
 import { loadViscmTestImage, createImageDataFromViscm } from './test-image-data';
 
 class ColormapVisualizer {
+  private cachedViscmData: ImageData | null = null;
   private currentColormap: ColorMap = {
     name: 'viridis',
     colors: [
@@ -459,12 +460,14 @@ class ColormapVisualizer {
       const rect = canvas.parentElement!.getBoundingClientRect();
       canvas.width = rect.width - 16;
       
-      // Make colormap strips much thicker
+      // Make colormap strips thicker but test images fill completely
       if (canvas.id === 'colormap-canvas' || canvas.id === 'grayscale-canvas' || 
           canvas.id === 'deuteranopia-canvas' || canvas.id === 'protanopia-canvas') {
-        canvas.height = Math.max(120, rect.height - 10); // Much thicker strips like reference image
+        canvas.height = Math.max(120, rect.height - 10);
+      } else if (canvas.id.startsWith('test-image')) {
+        canvas.height = rect.height - 16; // Test images fill container with minimal padding
       } else {
-        canvas.height = rect.height - 40;
+        canvas.height = rect.height - 40; // Other canvases (3D plot, etc.)
       }
     });
 
@@ -475,6 +478,7 @@ class ColormapVisualizer {
       resizeTimeout = window.setTimeout(() => {
         this.setupCanvases();
         this.updateVisualization();
+        this.drawTestImages();
       }, 250);
     });
   }
@@ -532,16 +536,18 @@ class ColormapVisualizer {
 
   private async drawTestImages() {
     try {
-      // Load the official viscm test image once
-      const viscmData = await loadViscmTestImage();
-      const viscmImageData = createImageDataFromViscm(viscmData);
+      // Load and cache the St. Helens data once
+      if (!this.cachedViscmData) {
+        const viscmData = await loadViscmTestImage();
+        this.cachedViscmData = createImageDataFromViscm(viscmData);
+      }
 
       // Test pattern in colormap (row 1, left)
       const testCanvas1 = document.getElementById('test-image-1') as HTMLCanvasElement;
       if (testCanvas1) {
         const ctx1 = testCanvas1.getContext('2d')!;
-        // Scale the viscm image to fit canvas
-        const scaledImageData = this.scaleImageData(viscmImageData, testCanvas1.width, testCanvas1.height);
+        // Scale the cached image to fit canvas
+        const scaledImageData = this.scaleImageData(this.cachedViscmData, testCanvas1.width, testCanvas1.height);
         const coloredImage1 = applyColormapToImage(scaledImageData, this.currentColormap);
         ctx1.putImageData(coloredImage1, 0, 0);
       }
@@ -550,8 +556,8 @@ class ColormapVisualizer {
       const testCanvas1CB = document.getElementById('test-image-1-cb') as HTMLCanvasElement;
       if (testCanvas1CB) {
         const ctx1CB = testCanvas1CB.getContext('2d')!;
-        // Scale the viscm image to fit canvas and keep as grayscale
-        const scaledImageData = this.scaleImageData(viscmImageData, testCanvas1CB.width, testCanvas1CB.height);
+        // Scale the cached image to fit canvas and keep as grayscale
+        const scaledImageData = this.scaleImageData(this.cachedViscmData, testCanvas1CB.width, testCanvas1CB.height);
         ctx1CB.putImageData(scaledImageData, 0, 0);
       }
 
@@ -559,7 +565,7 @@ class ColormapVisualizer {
       const testCanvas2 = document.getElementById('test-image-2') as HTMLCanvasElement;
       if (testCanvas2) {
         const ctx2 = testCanvas2.getContext('2d')!;
-        const scaledImageData = this.scaleImageData(viscmImageData, testCanvas2.width, testCanvas2.height);
+        const scaledImageData = this.scaleImageData(this.cachedViscmData, testCanvas2.width, testCanvas2.height);
         const coloredImage2 = applyColormapToImage(scaledImageData, this.currentColormap);
         
         // First draw the colored image
@@ -590,7 +596,7 @@ class ColormapVisualizer {
       const testCanvas2CB = document.getElementById('test-image-2-cb') as HTMLCanvasElement;
       if (testCanvas2CB) {
         const ctx2CB = testCanvas2CB.getContext('2d')!;
-        const scaledImageData = this.scaleImageData(viscmImageData, testCanvas2CB.width, testCanvas2CB.height);
+        const scaledImageData = this.scaleImageData(this.cachedViscmData, testCanvas2CB.width, testCanvas2CB.height);
         const coloredImage2 = applyColormapToImage(scaledImageData, this.currentColormap);
         
         // First draw the colored image
@@ -621,7 +627,7 @@ class ColormapVisualizer {
       const testCanvas3 = document.getElementById('test-image-3') as HTMLCanvasElement;
       if (testCanvas3) {
         const ctx3 = testCanvas3.getContext('2d')!;
-        const scaledImageData = this.scaleImageData(viscmImageData, testCanvas3.width, testCanvas3.height);
+        const scaledImageData = this.scaleImageData(this.cachedViscmData, testCanvas3.width, testCanvas3.height);
         const coloredImage3 = applyColormapToImage(scaledImageData, this.currentColormap);
         ctx3.putImageData(coloredImage3, 0, 0);
       }
@@ -630,7 +636,7 @@ class ColormapVisualizer {
       const testCanvas3CB = document.getElementById('test-image-3-cb') as HTMLCanvasElement;
       if (testCanvas3CB) {
         const ctx3CB = testCanvas3CB.getContext('2d')!;
-        const scaledImageData = this.scaleImageData(viscmImageData, testCanvas3CB.width, testCanvas3CB.height);
+        const scaledImageData = this.scaleImageData(this.cachedViscmData, testCanvas3CB.width, testCanvas3CB.height);
         const coloredImage3 = applyColormapToImage(scaledImageData, this.currentColormap);
         
         // First draw the colored image

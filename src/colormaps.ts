@@ -1,4 +1,4 @@
-import { ColorMap, RGB } from './types';
+import { ColorMap } from './types';
 
 // Cache for individual colormaps
 let colormapCache = new Map<string, ColorMap>();

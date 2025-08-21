@@ -1,0 +1,10 @@
+[project]
+name = "python-analysis"
+version = "0.1.0"
+description = "Add your description here"
+requires-python = ">=3.13"
+dependencies = [
+    "colorspacious>=1.1.2",
+    "matplotlib>=3.10.5",
+    "numpy>=2.3.2",
+]
