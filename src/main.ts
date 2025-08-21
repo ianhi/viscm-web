@@ -1,5 +1,5 @@
 import './style.css';
-import { colormaps, getColormap } from './colormaps';
+import { colormaps, getColormap, getColormaps, getAllColormapNames } from './colormaps';
 import { 
   calculatePerceptualDeltas, 
   calculateLightnessDeltas, 
@@ -17,9 +17,24 @@ import {
 
 class ColormapVisualizer {
   private currentColormap = colormaps[0];
+  private deltaEMethod = '2000';
   
   constructor() {
     this.initializeUI();
+    this.loadAndInitialize();
+  }
+  
+  private async loadAndInitialize() {
+    // Wait for colormaps to load
+    await getColormaps();
+    
+    // Set default colormap if available
+    if (colormaps.length > 0) {
+      this.currentColormap = colormaps[0];
+    }
+    
+    // Rebuild UI with loaded colormaps
+    this.updateColormapOptions();
     this.updateVisualization();
   }
   
@@ -33,7 +48,14 @@ class ColormapVisualizer {
       
       <div class="controls">
         <select id="colormap-select">
-          ${colormaps.map(cm => `<option value="${cm.name}">${cm.name}</option>`).join('')}
+          <option value="">Loading colormaps...</option>
+        </select>
+        <select id="deltae-method">
+          <option value="2000">ΔE 2000</option>
+          <option value="76">ΔE 76</option>
+          <option value="CMC">ΔE CMC</option>
+          <option value="ITP">ΔE ITP</option>
+          <option value="Jz">ΔE Jz</option>
         </select>
       </div>
       
@@ -117,9 +139,9 @@ class ColormapVisualizer {
       </div>
     `;
     
-    // Add event listener
-    const select = document.getElementById('colormap-select') as HTMLSelectElement;
-    select.addEventListener('change', (e) => {
+    // Add event listeners
+    const colormapSelect = document.getElementById('colormap-select') as HTMLSelectElement;
+    colormapSelect.addEventListener('change', (e) => {
       const target = e.target as HTMLSelectElement;
       const colormap = getColormap(target.value);
       if (colormap) {
@@ -128,8 +150,36 @@ class ColormapVisualizer {
       }
     });
     
+    const deltaESelect = document.getElementById('deltae-method') as HTMLSelectElement;
+    deltaESelect.addEventListener('change', (e) => {
+      const target = e.target as HTMLSelectElement;
+      this.deltaEMethod = target.value;
+      this.updatePerceptualAnalysis();
+    });
+    
     // Setup canvases
     this.setupCanvases();
+  }
+  
+  private updateColormapOptions() {
+    const select = document.getElementById('colormap-select') as HTMLSelectElement;
+    if (!select) return;
+    
+    // Clear existing options
+    select.innerHTML = '';
+    
+    // Add colormap options
+    colormaps.forEach(cm => {
+      const option = document.createElement('option');
+      option.value = cm.name;
+      option.textContent = cm.name;
+      select.appendChild(option);
+    });
+    
+    // Set default selection
+    if (this.currentColormap) {
+      select.value = this.currentColormap.name;
+    }
   }
   
   private setupCanvases() {
@@ -164,9 +214,9 @@ class ColormapVisualizer {
     drawColormapStrip(grayscaleCanvas, grayscaleColors);
     
     // Calculate and draw perceptual deltas
-    const perceptualDeltas = calculatePerceptualDeltas(colors);
+    const perceptualDeltas = calculatePerceptualDeltas(colors, this.deltaEMethod);
     const perceptualPlot = document.getElementById('perceptual-delta-plot')!;
-    drawLineChart(perceptualPlot, perceptualDeltas, 'ΔE');
+    drawLineChart(perceptualPlot, perceptualDeltas, `ΔE ${this.deltaEMethod}`);
     
     // Update perceptual stats
     const pStats = calculateStats(perceptualDeltas);
@@ -180,7 +230,7 @@ class ColormapVisualizer {
     // Calculate and draw lightness deltas
     const lightnessDeltas = calculateLightnessDeltas(colors);
     const lightnessPlot = document.getElementById('lightness-delta-plot')!;
-    drawLineChart(lightnessPlot, lightnessDeltas, 'ΔL*');
+    drawLineChart(lightnessPlot, lightnessDeltas, 'Lightness Derivative (ΔL*)');
     
     // Update lightness stats
     const lStats = calculateStats(lightnessDeltas);
@@ -210,6 +260,26 @@ class ColormapVisualizer {
     
     // Draw test images
     this.drawTestImages();
+  }
+  
+  private updatePerceptualAnalysis() {
+    const colors = this.currentColormap.colors;
+    
+    // Update perceptual deltas (deltaE-dependent)
+    const perceptualDeltas = calculatePerceptualDeltas(colors, this.deltaEMethod);
+    const perceptualPlot = document.getElementById('perceptual-delta-plot')!;
+    drawLineChart(perceptualPlot, perceptualDeltas, `ΔE ${this.deltaEMethod}`);
+    
+    // Update perceptual stats
+    const pStats = calculateStats(perceptualDeltas);
+    const pStatsEl = document.getElementById('perceptual-stats')!;
+    pStatsEl.innerHTML = `
+      Length: ${pStats.totalLength.toFixed(1)}<br>
+      RMS: ${pStats.rmsDeviation.toFixed(2)} (${(100 * pStats.rmsDeviation / pStats.totalLength).toFixed(1)}%)<br>
+      <small>Points: ${perceptualDeltas.length}</small>
+    `;
+    
+    // Note: Lightness deltas don't need updating since they don't depend on deltaE method
   }
   
   private drawTestImages() {

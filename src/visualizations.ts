@@ -36,17 +36,6 @@ export function drawLineChart(container: HTMLElement, values: number[], title: s
     name: title
   };
   
-  // Calculate reasonable y-axis range
-  const minVal = Math.min(...values, 0);
-  const maxVal = Math.max(...values, 0);
-  const rawRange = maxVal - minVal;
-  const minRange = Math.max(rawRange, Math.abs(maxVal) * 0.1, Math.abs(minVal) * 0.1, 1);
-  
-  const center = (maxVal + minVal) / 2;
-  const halfRange = minRange / 2;
-  const yMin = center - halfRange;
-  const yMax = center + halfRange;
-  
   const layout = {
     xaxis: {
       title: 'Position',
@@ -56,7 +45,6 @@ export function drawLineChart(container: HTMLElement, values: number[], title: s
     },
     yaxis: {
       title: title,
-      range: [yMin, yMax],
       showgrid: true,
       zeroline: true,
       zerolinecolor: '#999',
@@ -128,11 +116,42 @@ export function draw3DColorSpace(container: HTMLElement, colormap: ColorMap) {
     }
   };
   
+  // Calculate ranges with minimum sizes to avoid noisy plots
+  const minAxisRange = 20; // Minimum range for any axis
+  
+  const xRange = [Math.min(...coords.x), Math.max(...coords.x)];
+  const yRange = [Math.min(...coords.y), Math.max(...coords.y)];
+  const zRange = [Math.min(...coords.z), Math.max(...coords.z)];
+  
+  // Expand ranges if they're too small
+  function ensureMinRange(range: [number, number], minRange: number): [number, number] {
+    const currentRange = range[1] - range[0];
+    if (currentRange < minRange) {
+      const center = (range[0] + range[1]) / 2;
+      const halfMinRange = minRange / 2;
+      return [center - halfMinRange, center + halfMinRange];
+    }
+    return range;
+  }
+  
+  const adjustedXRange = ensureMinRange(xRange, minAxisRange);
+  const adjustedYRange = ensureMinRange(yRange, minAxisRange);
+  const adjustedZRange = ensureMinRange(zRange, minAxisRange);
+  
   const layout = {
     scene: {
-      xaxis: { title: 'a* (green-red)', range: [-100, 100] },
-      yaxis: { title: 'b* (blue-yellow)', range: [-100, 100] },
-      zaxis: { title: 'L* (lightness)', range: [0, 100] },
+      xaxis: { 
+        title: 'a* (green-red)',
+        range: adjustedXRange
+      },
+      yaxis: { 
+        title: 'b* (blue-yellow)',
+        range: adjustedYRange
+      },
+      zaxis: { 
+        title: 'L* (lightness)',
+        range: adjustedZRange
+      },
       camera: {
         eye: { x: 1.5, y: 1.5, z: 1.5 }
       }

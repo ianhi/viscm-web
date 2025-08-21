@@ -7,6 +7,12 @@ export interface RGB {
 export interface ColorMap {
   name: string;
   colors: RGB[];
+  metadata?: {
+    source?: string;
+    num_points?: number;
+    type?: string;
+    category?: string;
+  };
 }
 
 export interface PerceptualStats {
