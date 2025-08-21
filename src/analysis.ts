@@ -1,16 +1,17 @@
-import chroma from 'chroma-js';
+import Color from 'colorjs.io';
 import { RGB, PerceptualStats } from './types';
 
 export function rgbToLab(color: RGB): [number, number, number] {
-  const c = chroma(color.r * 255, color.g * 255, color.b * 255, 'rgb');
-  return c.lab();
+  const c = new Color('srgb', [color.r, color.g, color.b]);
+  const lab = c.to('lab');
+  return [lab.coords[0], lab.coords[1], lab.coords[2]];
 }
 
 export function calculateDeltaE(color1: RGB, color2: RGB): number {
-  const c1 = chroma(color1.r * 255, color1.g * 255, color1.b * 255, 'rgb');
-  const c2 = chroma(color2.r * 255, color2.g * 255, color2.b * 255, 'rgb');
-  // Use deltaE calculation (CIE76 by default in chroma.js)
-  return chroma.deltaE(c1, c2);
+  const c1 = new Color('srgb', [color1.r, color1.g, color1.b]);
+  const c2 = new Color('srgb', [color2.r, color2.g, color2.b]);
+  // Use deltaE 2000 for most accurate perceptual difference
+  return c1.deltaE(c2, '2000');
 }
 
 export function calculatePerceptualDeltas(colors: RGB[]): number[] {
@@ -47,12 +48,16 @@ export function calculateStats(deltas: number[]): PerceptualStats {
 
 export function toGrayscale(colors: RGB[]): RGB[] {
   return colors.map(color => {
-    const c = chroma(color.r * 255, color.g * 255, color.b * 255, 'rgb');
-    const [l] = c.lab();
+    const c = new Color('srgb', [color.r, color.g, color.b]);
+    const lab = c.to('lab');
     // Create grayscale by setting a* and b* to 0, keeping L* (lightness)
-    const gray = chroma.lab(l, 0, 0);
-    const [r, g, b] = gray.rgb();
-    return { r: r / 255, g: g / 255, b: b / 255 };
+    const gray = new Color('lab', [lab.coords[0], 0, 0]);
+    const srgb = gray.to('srgb');
+    return { 
+      r: Math.max(0, Math.min(1, srgb.coords[0])), 
+      g: Math.max(0, Math.min(1, srgb.coords[1])), 
+      b: Math.max(0, Math.min(1, srgb.coords[2])) 
+    };
   });
 }
 
