@@ -386,7 +386,7 @@ class ColormapVisualizer {
         </div>
         
         <div class="viz-panel test-image-3-cb">
-          <h3>Sine Wave (Deuteranopia)</h3>
+          <h3>Sine Wave (Grayscale)</h3>
           <canvas id="test-image-3-cb"></canvas>
         </div>
       </div>
@@ -623,43 +623,22 @@ class ColormapVisualizer {
         ctx2CB.putImageData(simulatedData, 0, 0);
       }
 
-      // Use viscm test image for bottom row patterns too (rows 3-4)
+      // Sine wave pattern in colormap (bottom row, left)
       const testCanvas3 = document.getElementById('test-image-3') as HTMLCanvasElement;
       if (testCanvas3) {
         const ctx3 = testCanvas3.getContext('2d')!;
-        const scaledImageData = this.scaleImageData(this.cachedViscmData, testCanvas3.width, testCanvas3.height);
-        const coloredImage3 = applyColormapToImage(scaledImageData, this.currentColormap);
-        ctx3.putImageData(coloredImage3, 0, 0);
+        const sineWaveImage = generateTestPattern(testCanvas3.width, testCanvas3.height);
+        const coloredSineWave = applyColormapToImage(sineWaveImage, this.currentColormap);
+        ctx3.putImageData(coloredSineWave, 0, 0);
       }
 
-      // Bottom pattern with color blindness
+      // Sine wave pattern in grayscale (bottom row, right)
       const testCanvas3CB = document.getElementById('test-image-3-cb') as HTMLCanvasElement;
       if (testCanvas3CB) {
         const ctx3CB = testCanvas3CB.getContext('2d')!;
-        const scaledImageData = this.scaleImageData(this.cachedViscmData, testCanvas3CB.width, testCanvas3CB.height);
-        const coloredImage3 = applyColormapToImage(scaledImageData, this.currentColormap);
-        
-        // First draw the colored image
-        ctx3CB.putImageData(coloredImage3, 0, 0);
-        
-        // Apply colorblind simulation
-        const imageData = ctx3CB.getImageData(0, 0, testCanvas3CB.width, testCanvas3CB.height);
-        const simulatedData3 = new ImageData(testCanvas3CB.width, testCanvas3CB.height);
-        for (let i = 0; i < imageData.data.length; i += 4) {
-          const rgb = {
-            r: imageData.data[i],
-            g: imageData.data[i + 1],
-            b: imageData.data[i + 2]
-          };
-          
-          const simulated = simulate(rgb, 'deuteranopia');
-          simulatedData3.data[i] = simulated.r;
-          simulatedData3.data[i + 1] = simulated.g;
-          simulatedData3.data[i + 2] = simulated.b;
-          simulatedData3.data[i + 3] = imageData.data[i + 3];
-        }
-        
-        ctx3CB.putImageData(simulatedData3, 0, 0);
+        const sineWaveImage = generateTestPattern(testCanvas3CB.width, testCanvas3CB.height);
+        // Keep as grayscale (don't apply colormap)
+        ctx3CB.putImageData(sineWaveImage, 0, 0);
       }
       
     } catch (error) {
