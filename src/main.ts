@@ -141,10 +141,10 @@ class ColormapVisualizer {
     });
     
     // Handle resize
-    let resizeTimeout: number;
+    let resizeTimeout: number | undefined;
     window.addEventListener('resize', () => {
-      clearTimeout(resizeTimeout);
-      resizeTimeout = setTimeout(() => {
+      if (resizeTimeout) clearTimeout(resizeTimeout);
+      resizeTimeout = window.setTimeout(() => {
         this.setupCanvases();
         this.updateVisualization();
       }, 250);

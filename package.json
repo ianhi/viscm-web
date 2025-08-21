@@ -17,7 +17,9 @@
   },
   "dependencies": {
     "@bjornlu/colorblind": "^1.0.3",
+    "@types/node": "^24.3.0",
     "chroma-js": "^2.4.2",
+    "colorjs.io": "^0.5.2",
     "d3-color": "^3.1.0",
     "plotly.js-dist": "^2.35.2"
   }

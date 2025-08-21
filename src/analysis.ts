@@ -2,13 +2,14 @@ import chroma from 'chroma-js';
 import { RGB, PerceptualStats } from './types';
 
 export function rgbToLab(color: RGB): [number, number, number] {
-  const c = chroma(color.r * 255, color.g * 255, color.b * 255);
+  const c = chroma(color.r * 255, color.g * 255, color.b * 255, 'rgb');
   return c.lab();
 }
 
 export function calculateDeltaE(color1: RGB, color2: RGB): number {
-  const c1 = chroma(color1.r * 255, color1.g * 255, color1.b * 255);
-  const c2 = chroma(color2.r * 255, color2.g * 255, color2.b * 255);
+  const c1 = chroma(color1.r * 255, color1.g * 255, color1.b * 255, 'rgb');
+  const c2 = chroma(color2.r * 255, color2.g * 255, color2.b * 255, 'rgb');
+  // Use deltaE calculation (CIE76 by default in chroma.js)
   return chroma.deltaE(c1, c2);
 }
 
@@ -46,8 +47,9 @@ export function calculateStats(deltas: number[]): PerceptualStats {
 
 export function toGrayscale(colors: RGB[]): RGB[] {
   return colors.map(color => {
-    const c = chroma(color.r * 255, color.g * 255, color.b * 255);
+    const c = chroma(color.r * 255, color.g * 255, color.b * 255, 'rgb');
     const [l] = c.lab();
+    // Create grayscale by setting a* and b* to 0, keeping L* (lightness)
     const gray = chroma.lab(l, 0, 0);
     const [r, g, b] = gray.rgb();
     return { r: r / 255, g: g / 255, b: b / 255 };
