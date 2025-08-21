@@ -103,10 +103,10 @@ export function drawColorBlindSimulation(
 export function draw3DColorSpace(container: HTMLElement, colormap: ColorMap) {
   const coords = getLab3DCoordinates(colormap.colors);
   
-  // Sample fewer points for the 3D plot to improve performance
-  const step = Math.max(1, Math.floor(colormap.colors.length / 50));
-  const sampledIndices = Array.from({ length: Math.ceil(colormap.colors.length / step) }, 
-    (_, i) => Math.min(i * step, colormap.colors.length - 1));
+  // Create colors array matching the coordinates
+  const colors = colormap.colors.map(c => 
+    `rgb(${Math.round(c.r * 255)}, ${Math.round(c.g * 255)}, ${Math.round(c.b * 255)})`
+  );
   
   const trace = {
     type: 'scatter3d',
@@ -115,20 +115,14 @@ export function draw3DColorSpace(container: HTMLElement, colormap: ColorMap) {
     y: coords.y,
     z: coords.z,
     line: {
-      color: sampledIndices.map(i => {
-        const c = colormap.colors[i];
-        return `rgb(${Math.round(c.r * 255)}, ${Math.round(c.g * 255)}, ${Math.round(c.b * 255)})`;
-      }),
-      width: 4
+      color: colors,
+      width: 3
     },
     marker: {
-      size: sampledIndices.map(i => i === 0 || i === colormap.colors.length - 1 ? 8 : 4),
-      color: sampledIndices.map(i => {
-        const c = colormap.colors[i];
-        return `rgb(${Math.round(c.r * 255)}, ${Math.round(c.g * 255)}, ${Math.round(c.b * 255)})`;
-      }),
+      size: 3,
+      color: colors,
       line: {
-        color: 'black',
+        color: 'rgba(0,0,0,0.1)',
         width: 0.5
       }
     }
