@@ -19,6 +19,7 @@ import { loadViscmTestImage, createImageDataFromViscm } from './test-image-data'
 
 class ColormapVisualizer {
   private cachedViscmData: ImageData | null = null;
+  private cachedSineWaveData: Map<string, ImageData> = new Map();
   private currentColormap: ColorMap = {
     name: 'viridis',
     colors: [
@@ -476,6 +477,8 @@ class ColormapVisualizer {
     window.addEventListener('resize', () => {
       if (resizeTimeout) clearTimeout(resizeTimeout);
       resizeTimeout = window.setTimeout(() => {
+        // Clear sine wave cache since canvas dimensions will change
+        this.cachedSineWaveData.clear();
         this.setupCanvases();
         this.updateVisualization();
         this.drawTestImages();
@@ -500,12 +503,10 @@ class ColormapVisualizer {
     const perceptualPlot = document.getElementById('perceptual-delta-plot')!;
     drawLineChart(perceptualPlot, perceptualDeltas, `ΔE ${this.deltaEMethod}`);
 
-
     // Calculate and draw lightness deltas
     const lightnessDeltas = calculateLightnessDeltas(colors);
     const lightnessPlot = document.getElementById('lightness-delta-plot')!;
     drawLineChart(lightnessPlot, lightnessDeltas, 'Lightness Derivative (ΔL*)');
-
 
     // Draw color blindness simulations
     const deuteranopiaCanvas = document.getElementById('deuteranopia-canvas') as HTMLCanvasElement;
@@ -627,7 +628,13 @@ class ColormapVisualizer {
       const testCanvas3 = document.getElementById('test-image-3') as HTMLCanvasElement;
       if (testCanvas3) {
         const ctx3 = testCanvas3.getContext('2d')!;
-        const sineWaveImage = generateTestPattern(testCanvas3.width, testCanvas3.height);
+        const cacheKey3 = `${testCanvas3.width}x${testCanvas3.height}`;
+        
+        if (!this.cachedSineWaveData.has(cacheKey3)) {
+          this.cachedSineWaveData.set(cacheKey3, generateTestPattern(testCanvas3.width, testCanvas3.height));
+        }
+        
+        const sineWaveImage = this.cachedSineWaveData.get(cacheKey3)!;
         const coloredSineWave = applyColormapToImage(sineWaveImage, this.currentColormap);
         ctx3.putImageData(coloredSineWave, 0, 0);
       }
@@ -636,7 +643,13 @@ class ColormapVisualizer {
       const testCanvas3CB = document.getElementById('test-image-3-cb') as HTMLCanvasElement;
       if (testCanvas3CB) {
         const ctx3CB = testCanvas3CB.getContext('2d')!;
-        const sineWaveImage = generateTestPattern(testCanvas3CB.width, testCanvas3CB.height);
+        const cacheKey3CB = `${testCanvas3CB.width}x${testCanvas3CB.height}`;
+        
+        if (!this.cachedSineWaveData.has(cacheKey3CB)) {
+          this.cachedSineWaveData.set(cacheKey3CB, generateTestPattern(testCanvas3CB.width, testCanvas3CB.height));
+        }
+        
+        const sineWaveImage = this.cachedSineWaveData.get(cacheKey3CB)!;
         // Keep as grayscale (don't apply colormap)
         ctx3CB.putImageData(sineWaveImage, 0, 0);
       }
@@ -647,6 +660,7 @@ class ColormapVisualizer {
       this.drawGeneratedTestImages();
     }
   }
+
 
   private scaleImageData(sourceData: ImageData, targetWidth: number, targetHeight: number): ImageData {
     const scaledData = new ImageData(targetWidth, targetHeight);

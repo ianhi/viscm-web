@@ -32,7 +32,7 @@ async function loadColormapIndex(): Promise<string[]> {
   }
 
   try {
-    const response = await fetch('/colormaps/index.json');
+    const response = await fetch('./colormaps/index.json');
     if (!response.ok) {
       throw new Error(`Failed to load colormap index: ${response.statusText}`);
     }
@@ -62,7 +62,7 @@ async function loadSingleColormap(name: string): Promise<ColorMap | null> {
   }
 
   try {
-    const response = await fetch(`/colormaps/${name}.json`);
+    const response = await fetch(`./colormaps/${name}.json`);
     if (!response.ok) {
       throw new Error(`Failed to load colormap ${name}: ${response.statusText}`);
     }

@@ -10,7 +10,7 @@ export async function loadViscmTestImage(): Promise<{ width: number; height: num
   
   try {
     // Load the St. Helens elevation data
-    const response = await fetch('./src/st-helens_before-modified.txt.gz');
+    const response = await fetch('./st-helens_before-modified.txt.gz');
     const data = await response.arrayBuffer();
     const uint8Array = new Uint8Array(data);
     

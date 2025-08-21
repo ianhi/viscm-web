@@ -188,14 +188,16 @@ export function generateTestPattern(width: number, height: number): ImageData {
       const nx = x / (width - 1);
       const ny = y / (height - 1);
       
-      // Create a complex pattern using multiple mathematical functions
-      // This tests how well the colormap preserves structure
-      const pattern1 = Math.sin(nx * Math.PI * 4) * Math.cos(ny * Math.PI * 4);
-      const pattern2 = Math.exp(-((nx - 0.5) ** 2 + (ny - 0.5) ** 2) * 8);
-      const pattern3 = Math.sin(nx * ny * Math.PI * 8);
+      // Create a sine wave pattern that exercises the full 0-1 range
+      // Combined horizontal and vertical sine waves for interesting structure
+      const sineX = Math.sin(nx * Math.PI * 6);
+      const sineY = Math.sin(ny * Math.PI * 4);
+      const radial = Math.sin(Math.sqrt((nx - 0.5) ** 2 + (ny - 0.5) ** 2) * Math.PI * 8);
       
-      // Combine patterns and normalize to 0-1
-      const value = (pattern1 * 0.4 + pattern2 * 0.4 + pattern3 * 0.2 + 1) / 2;
+      // Combine patterns to create full 0-1 range coverage
+      const combined = (sineX * 0.4 + sineY * 0.4 + radial * 0.2);
+      // Map from [-1, 1] to [0, 1] to ensure full colormap range is used
+      const value = (combined + 1) / 2;
       const intensity = Math.max(0, Math.min(1, value)) * 255;
       
       imageData.data[pixelIndex] = intensity;     // R

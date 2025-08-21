@@ -1,8 +1,10 @@
 import { defineConfig } from 'vite'
 
 export default defineConfig({
-  base: './',
+  base: '/viscm-web/',
   build: {
-    outDir: 'dist'
+    outDir: 'dist',
+    assetsDir: 'assets',
+    chunkSizeWarningLimit: 5000 // Suppress warning for now
   }
 })
