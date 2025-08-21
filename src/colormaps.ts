@@ -1,58 +1,366 @@
 import { ColorMap, RGB } from './types';
 
-// Cache for loaded colormaps
-let colormapsCache: ColorMap[] | null = null;
+// Cache for individual colormaps
+let colormapCache = new Map<string, ColorMap>();
 let colormapIndex: any = null;
 
-// Load colormaps from JSON files
-async function loadColormaps(): Promise<ColorMap[]> {
-  if (colormapsCache) {
-    return colormapsCache;
+// Embedded colormap names for immediate availability (from matplotlib)
+let colormapNames: string[] = [
+  'viridis', 'plasma', 'inferno', 'magma', 'cividis',
+  'Greys', 'Purples', 'Blues', 'Greens', 'Oranges', 'Reds',
+  'YlOrBr', 'YlOrRd', 'OrRd', 'PuRd', 'RdPu', 'BuPu',
+  'GnBu', 'PuBu', 'YlGnBu', 'PuBuGn', 'BuGn', 'YlGn',
+  'binary', 'gist_yarg', 'gist_gray', 'gray', 'bone', 'pink',
+  'spring', 'summer', 'autumn', 'winter', 'cool', 'Wistia',
+  'hot', 'afmhot', 'gist_heat', 'copper',
+  'PiYG', 'PRGn', 'BrBG', 'PuOr', 'RdGy', 'RdBu',
+  'RdYlBu', 'RdYlGn', 'Spectral', 'coolwarm', 'bwr', 'seismic',
+  'twilight', 'twilight_shifted', 'hsv',
+  'Pastel1', 'Pastel2', 'Paired', 'Accent',
+  'Dark2', 'Set1', 'Set2', 'Set3',
+  'tab10', 'tab20', 'tab20b', 'tab20c',
+  'flag', 'prism', 'ocean', 'gist_earth', 'terrain', 'gist_stern',
+  'gnuplot', 'gnuplot2', 'CMRmap', 'cubehelix', 'brg',
+  'gist_rainbow', 'rainbow', 'jet', 'turbo', 'nipy_spectral',
+  'gist_ncar'
+];
+
+// Load just the colormap index (list of available colormaps) in background
+async function loadColormapIndex(): Promise<string[]> {
+  if (colormapIndex) {
+    return colormapNames;
   }
 
   try {
-    // Load the index file which contains all colormap data
     const response = await fetch('/colormaps/index.json');
     if (!response.ok) {
-      throw new Error(`Failed to load colormaps: ${response.statusText}`);
+      throw new Error(`Failed to load colormap index: ${response.statusText}`);
     }
     
     colormapIndex = await response.json();
-    colormapsCache = colormapIndex.colormaps;
+    // Update names from server if different from embedded list
+    const serverNames = colormapIndex.colormaps.map((cm: any) => cm.name);
+    colormapNames = serverNames;
     
-    return colormapsCache;
+    return colormapNames;
   } catch (error) {
-    console.error('Failed to load colormaps:', error);
-    // Fallback to basic viridis if loading fails
-    return [{
-      name: 'viridis',
-      colors: [
-        { r: 0.267004, g: 0.004874, b: 0.329415 },
-        { r: 0.268510, g: 0.009605, b: 0.335427 },
-        { r: 0.993248, g: 0.906157, b: 0.143936 }
-      ],
-      metadata: { source: 'fallback', category: 'perceptually_uniform' }
-    }];
+    console.error('Failed to load colormap index:', error);
+    // Continue with embedded names
+    return colormapNames;
   }
 }
 
-// Export synchronous access (will be populated after loading)
-export let colormaps: ColorMap[] = [];
-
-// Initialize colormaps on module load
-loadColormaps().then(cmaps => {
-  colormaps.splice(0, colormaps.length, ...cmaps);
-  console.log(`Loaded ${cmaps.length} colormaps`);
-}).catch(error => {
-  console.error('Failed to initialize colormaps:', error);
+// Start loading index in background immediately
+loadColormapIndex().catch(() => {
+  // Silently fail, we have embedded names
 });
 
-export async function getColormaps(): Promise<ColorMap[]> {
-  return await loadColormaps();
+// Load a single colormap by name
+async function loadSingleColormap(name: string): Promise<ColorMap | null> {
+  if (colormapCache.has(name)) {
+    return colormapCache.get(name)!;
+  }
+
+  try {
+    const response = await fetch(`/colormaps/${name}.json`);
+    if (!response.ok) {
+      throw new Error(`Failed to load colormap ${name}: ${response.statusText}`);
+    }
+    
+    const colormap = await response.json();
+    colormapCache.set(name, colormap);
+    console.log(`Loaded colormap: ${name}`);
+    
+    return colormap;
+  } catch (error) {
+    console.error(`Failed to load colormap ${name}:`, error);
+    return null;
+  }
 }
 
-export function getColormap(name: string): ColorMap | undefined {
-  return colormaps.find(cm => cm.name === name);
+// Viridis colormap data (embedded for immediate availability)
+const viridisColormap: ColorMap = {
+  name: 'viridis',
+  colors: [
+    { r: 0.267004, g: 0.004874, b: 0.329415 },
+    { r: 0.268510, g: 0.009605, b: 0.335427 },
+    { r: 0.269944, g: 0.014625, b: 0.341379 },
+    { r: 0.271305, g: 0.019942, b: 0.347269 },
+    { r: 0.272594, g: 0.025563, b: 0.353093 },
+    { r: 0.273809, g: 0.031497, b: 0.358853 },
+    { r: 0.274952, g: 0.037752, b: 0.364543 },
+    { r: 0.276022, g: 0.044167, b: 0.370164 },
+    { r: 0.277018, g: 0.050344, b: 0.375715 },
+    { r: 0.277941, g: 0.056324, b: 0.381191 },
+    { r: 0.278791, g: 0.062145, b: 0.386592 },
+    { r: 0.279566, g: 0.067836, b: 0.391917 },
+    { r: 0.280267, g: 0.073417, b: 0.397163 },
+    { r: 0.280894, g: 0.078907, b: 0.402329 },
+    { r: 0.281446, g: 0.084320, b: 0.407414 },
+    { r: 0.281924, g: 0.089666, b: 0.412415 },
+    { r: 0.282327, g: 0.094955, b: 0.417331 },
+    { r: 0.282656, g: 0.100196, b: 0.422160 },
+    { r: 0.282910, g: 0.105393, b: 0.426902 },
+    { r: 0.283091, g: 0.110553, b: 0.431554 },
+    { r: 0.283197, g: 0.115680, b: 0.436115 },
+    { r: 0.283229, g: 0.120777, b: 0.440584 },
+    { r: 0.283187, g: 0.125848, b: 0.444960 },
+    { r: 0.283072, g: 0.130895, b: 0.449241 },
+    { r: 0.282884, g: 0.135920, b: 0.453427 },
+    { r: 0.282623, g: 0.140926, b: 0.457517 },
+    { r: 0.282290, g: 0.145912, b: 0.461510 },
+    { r: 0.281887, g: 0.150881, b: 0.465405 },
+    { r: 0.281412, g: 0.155834, b: 0.469201 },
+    { r: 0.280868, g: 0.160771, b: 0.472899 },
+    { r: 0.280255, g: 0.165693, b: 0.476498 },
+    { r: 0.279574, g: 0.170599, b: 0.479997 },
+    { r: 0.278826, g: 0.175490, b: 0.483397 },
+    { r: 0.278012, g: 0.180367, b: 0.486697 },
+    { r: 0.277134, g: 0.185228, b: 0.489898 },
+    { r: 0.276194, g: 0.190074, b: 0.493001 },
+    { r: 0.275191, g: 0.194905, b: 0.496005 },
+    { r: 0.274128, g: 0.199721, b: 0.498911 },
+    { r: 0.273006, g: 0.204520, b: 0.501721 },
+    { r: 0.271828, g: 0.209303, b: 0.504434 },
+    { r: 0.270595, g: 0.214069, b: 0.507052 },
+    { r: 0.269308, g: 0.218818, b: 0.509577 },
+    { r: 0.267968, g: 0.223549, b: 0.512008 },
+    { r: 0.266580, g: 0.228262, b: 0.514349 },
+    { r: 0.265145, g: 0.232956, b: 0.516599 },
+    { r: 0.263663, g: 0.237631, b: 0.518762 },
+    { r: 0.262138, g: 0.242286, b: 0.520837 },
+    { r: 0.260571, g: 0.246922, b: 0.522828 },
+    { r: 0.258965, g: 0.251537, b: 0.524736 },
+    { r: 0.257322, g: 0.256130, b: 0.526563 },
+    { r: 0.255645, g: 0.260703, b: 0.528312 },
+    { r: 0.253935, g: 0.265254, b: 0.529983 },
+    { r: 0.252194, g: 0.269783, b: 0.531579 },
+    { r: 0.250425, g: 0.274290, b: 0.533103 },
+    { r: 0.248629, g: 0.278775, b: 0.534556 },
+    { r: 0.246811, g: 0.283237, b: 0.535941 },
+    { r: 0.244972, g: 0.287675, b: 0.537260 },
+    { r: 0.243113, g: 0.292092, b: 0.538516 },
+    { r: 0.241237, g: 0.296485, b: 0.539709 },
+    { r: 0.239346, g: 0.300855, b: 0.540844 },
+    { r: 0.237441, g: 0.305202, b: 0.541921 },
+    { r: 0.235526, g: 0.309527, b: 0.542944 },
+    { r: 0.233603, g: 0.313828, b: 0.543914 },
+    { r: 0.231674, g: 0.318106, b: 0.544834 },
+    { r: 0.229739, g: 0.322361, b: 0.545706 },
+    { r: 0.227802, g: 0.326594, b: 0.546532 },
+    { r: 0.225863, g: 0.330805, b: 0.547314 },
+    { r: 0.223925, g: 0.334994, b: 0.548053 },
+    { r: 0.221989, g: 0.339161, b: 0.548752 },
+    { r: 0.220057, g: 0.343307, b: 0.549413 },
+    { r: 0.218130, g: 0.347432, b: 0.550038 },
+    { r: 0.216210, g: 0.351535, b: 0.550627 },
+    { r: 0.214298, g: 0.355619, b: 0.551184 },
+    { r: 0.212395, g: 0.359683, b: 0.551710 },
+    { r: 0.210503, g: 0.363727, b: 0.552206 },
+    { r: 0.208623, g: 0.367752, b: 0.552675 },
+    { r: 0.206756, g: 0.371758, b: 0.553117 },
+    { r: 0.204903, g: 0.375746, b: 0.553533 },
+    { r: 0.203063, g: 0.379716, b: 0.553925 },
+    { r: 0.201239, g: 0.383670, b: 0.554294 },
+    { r: 0.199430, g: 0.387607, b: 0.554642 },
+    { r: 0.197636, g: 0.391528, b: 0.554969 },
+    { r: 0.195860, g: 0.395433, b: 0.555276 },
+    { r: 0.194100, g: 0.399323, b: 0.555565 },
+    { r: 0.192357, g: 0.403199, b: 0.555836 },
+    { r: 0.190631, g: 0.407061, b: 0.556089 },
+    { r: 0.188923, g: 0.410910, b: 0.556326 },
+    { r: 0.187231, g: 0.414746, b: 0.556547 },
+    { r: 0.185556, g: 0.418570, b: 0.556753 },
+    { r: 0.183898, g: 0.422383, b: 0.556944 },
+    { r: 0.182256, g: 0.426184, b: 0.557120 },
+    { r: 0.180629, g: 0.429975, b: 0.557282 },
+    { r: 0.179019, g: 0.433756, b: 0.557430 },
+    { r: 0.177423, g: 0.437527, b: 0.557565 },
+    { r: 0.175841, g: 0.441290, b: 0.557685 },
+    { r: 0.174274, g: 0.445044, b: 0.557792 },
+    { r: 0.172719, g: 0.448791, b: 0.557885 },
+    { r: 0.171176, g: 0.452530, b: 0.557965 },
+    { r: 0.169646, g: 0.456262, b: 0.558030 },
+    { r: 0.168126, g: 0.459988, b: 0.558082 },
+    { r: 0.166617, g: 0.463708, b: 0.558119 },
+    { r: 0.165117, g: 0.467423, b: 0.558141 },
+    { r: 0.163625, g: 0.471133, b: 0.558148 },
+    { r: 0.162142, g: 0.474838, b: 0.558140 },
+    { r: 0.160665, g: 0.478540, b: 0.558115 },
+    { r: 0.159194, g: 0.482237, b: 0.558073 },
+    { r: 0.157729, g: 0.485932, b: 0.558013 },
+    { r: 0.156270, g: 0.489624, b: 0.557936 },
+    { r: 0.154815, g: 0.493313, b: 0.557840 },
+    { r: 0.153364, g: 0.497000, b: 0.557724 },
+    { r: 0.151918, g: 0.500685, b: 0.557587 },
+    { r: 0.150476, g: 0.504369, b: 0.557430 },
+    { r: 0.149039, g: 0.508051, b: 0.557250 },
+    { r: 0.147607, g: 0.511733, b: 0.557049 },
+    { r: 0.146180, g: 0.515413, b: 0.556823 },
+    { r: 0.144759, g: 0.519093, b: 0.556572 },
+    { r: 0.143343, g: 0.522773, b: 0.556295 },
+    { r: 0.141935, g: 0.526453, b: 0.555991 },
+    { r: 0.140536, g: 0.530132, b: 0.555659 },
+    { r: 0.139147, g: 0.533812, b: 0.555298 },
+    { r: 0.137770, g: 0.537492, b: 0.554906 },
+    { r: 0.136408, g: 0.541173, b: 0.554483 },
+    { r: 0.135066, g: 0.544853, b: 0.554029 },
+    { r: 0.133743, g: 0.548535, b: 0.553541 },
+    { r: 0.132444, g: 0.552216, b: 0.553018 },
+    { r: 0.131172, g: 0.555899, b: 0.552459 },
+    { r: 0.129933, g: 0.559582, b: 0.551864 },
+    { r: 0.128729, g: 0.563265, b: 0.551229 },
+    { r: 0.127568, g: 0.566949, b: 0.550556 },
+    { r: 0.126453, g: 0.570633, b: 0.549841 },
+    { r: 0.125394, g: 0.574318, b: 0.549086 },
+    { r: 0.124395, g: 0.578002, b: 0.548287 },
+    { r: 0.123463, g: 0.581687, b: 0.547445 },
+    { r: 0.122606, g: 0.585371, b: 0.546557 },
+    { r: 0.121831, g: 0.589055, b: 0.545623 },
+    { r: 0.121148, g: 0.592739, b: 0.544641 },
+    { r: 0.120565, g: 0.596422, b: 0.543611 },
+    { r: 0.120092, g: 0.600104, b: 0.542530 },
+    { r: 0.119738, g: 0.603785, b: 0.541400 },
+    { r: 0.119512, g: 0.607464, b: 0.540218 },
+    { r: 0.119423, g: 0.611141, b: 0.538982 },
+    { r: 0.119483, g: 0.614817, b: 0.537692 },
+    { r: 0.119699, g: 0.618490, b: 0.536347 },
+    { r: 0.120081, g: 0.622161, b: 0.534946 },
+    { r: 0.120638, g: 0.625828, b: 0.533488 },
+    { r: 0.121380, g: 0.629492, b: 0.531973 },
+    { r: 0.122312, g: 0.633153, b: 0.530398 },
+    { r: 0.123444, g: 0.636809, b: 0.528763 },
+    { r: 0.124780, g: 0.640461, b: 0.527068 },
+    { r: 0.126326, g: 0.644107, b: 0.525311 },
+    { r: 0.128087, g: 0.647749, b: 0.523491 },
+    { r: 0.130067, g: 0.651384, b: 0.521608 },
+    { r: 0.132268, g: 0.655014, b: 0.519661 },
+    { r: 0.134692, g: 0.658636, b: 0.517649 },
+    { r: 0.137339, g: 0.662252, b: 0.515571 },
+    { r: 0.140210, g: 0.665859, b: 0.513427 },
+    { r: 0.143303, g: 0.669459, b: 0.511215 },
+    { r: 0.146616, g: 0.673050, b: 0.508936 },
+    { r: 0.150148, g: 0.676631, b: 0.506589 },
+    { r: 0.153894, g: 0.680203, b: 0.504172 },
+    { r: 0.157851, g: 0.683765, b: 0.501686 },
+    { r: 0.162016, g: 0.687316, b: 0.499129 },
+    { r: 0.166383, g: 0.690856, b: 0.496502 },
+    { r: 0.170948, g: 0.694384, b: 0.493803 },
+    { r: 0.175707, g: 0.697900, b: 0.491033 },
+    { r: 0.180653, g: 0.701402, b: 0.488189 },
+    { r: 0.185783, g: 0.704891, b: 0.485273 },
+    { r: 0.191090, g: 0.708366, b: 0.482284 },
+    { r: 0.196571, g: 0.711827, b: 0.479221 },
+    { r: 0.202219, g: 0.715272, b: 0.476084 },
+    { r: 0.208030, g: 0.718701, b: 0.472873 },
+    { r: 0.214000, g: 0.722114, b: 0.469588 },
+    { r: 0.220124, g: 0.725509, b: 0.466226 },
+    { r: 0.226397, g: 0.728888, b: 0.462789 },
+    { r: 0.232815, g: 0.732247, b: 0.459277 },
+    { r: 0.239374, g: 0.735588, b: 0.455688 },
+    { r: 0.246070, g: 0.738910, b: 0.452024 },
+    { r: 0.252899, g: 0.742211, b: 0.448284 },
+    { r: 0.259857, g: 0.745492, b: 0.444467 },
+    { r: 0.266941, g: 0.748751, b: 0.440573 },
+    { r: 0.274149, g: 0.751988, b: 0.436601 },
+    { r: 0.281477, g: 0.755203, b: 0.432552 },
+    { r: 0.288921, g: 0.758394, b: 0.428426 },
+    { r: 0.296479, g: 0.761561, b: 0.424223 },
+    { r: 0.304148, g: 0.764704, b: 0.419943 },
+    { r: 0.311925, g: 0.767822, b: 0.415586 },
+    { r: 0.319809, g: 0.770914, b: 0.411152 },
+    { r: 0.327796, g: 0.773980, b: 0.406640 },
+    { r: 0.335885, g: 0.777018, b: 0.402049 },
+    { r: 0.344074, g: 0.780029, b: 0.397381 },
+    { r: 0.352360, g: 0.783011, b: 0.392636 },
+    { r: 0.360741, g: 0.785964, b: 0.387814 },
+    { r: 0.369214, g: 0.788888, b: 0.382914 },
+    { r: 0.377779, g: 0.791781, b: 0.377939 },
+    { r: 0.386433, g: 0.794644, b: 0.372886 },
+    { r: 0.395174, g: 0.797475, b: 0.367757 },
+    { r: 0.404001, g: 0.800275, b: 0.362552 },
+    { r: 0.412913, g: 0.803041, b: 0.357269 },
+    { r: 0.421908, g: 0.805774, b: 0.351910 },
+    { r: 0.430983, g: 0.808473, b: 0.346476 },
+    { r: 0.440137, g: 0.811138, b: 0.340967 },
+    { r: 0.449368, g: 0.813768, b: 0.335384 },
+    { r: 0.458674, g: 0.816363, b: 0.329727 },
+    { r: 0.468053, g: 0.818921, b: 0.323998 },
+    { r: 0.477504, g: 0.821444, b: 0.318195 },
+    { r: 0.487026, g: 0.823929, b: 0.312321 },
+    { r: 0.496615, g: 0.826376, b: 0.306377 },
+    { r: 0.506271, g: 0.828786, b: 0.300362 },
+    { r: 0.515992, g: 0.831158, b: 0.294279 },
+    { r: 0.525776, g: 0.833491, b: 0.288127 },
+    { r: 0.535621, g: 0.835785, b: 0.281908 },
+    { r: 0.545524, g: 0.838039, b: 0.275626 },
+    { r: 0.555484, g: 0.840254, b: 0.269281 },
+    { r: 0.565498, g: 0.842430, b: 0.262877 },
+    { r: 0.575563, g: 0.844566, b: 0.256415 },
+    { r: 0.585678, g: 0.846661, b: 0.249897 },
+    { r: 0.595839, g: 0.848717, b: 0.243329 },
+    { r: 0.606045, g: 0.850733, b: 0.236712 },
+    { r: 0.616293, g: 0.852709, b: 0.230052 },
+    { r: 0.626579, g: 0.854645, b: 0.223353 },
+    { r: 0.636902, g: 0.856542, b: 0.216620 },
+    { r: 0.647257, g: 0.858400, b: 0.209861 },
+    { r: 0.657642, g: 0.860219, b: 0.203082 },
+    { r: 0.668054, g: 0.861999, b: 0.196293 },
+    { r: 0.678489, g: 0.863742, b: 0.189503 },
+    { r: 0.688944, g: 0.865448, b: 0.182725 },
+    { r: 0.699415, g: 0.867117, b: 0.175971 },
+    { r: 0.709898, g: 0.868751, b: 0.169257 },
+    { r: 0.720391, g: 0.870350, b: 0.162603 },
+    { r: 0.730889, g: 0.871916, b: 0.156029 },
+    { r: 0.741388, g: 0.873449, b: 0.149561 },
+    { r: 0.751884, g: 0.874951, b: 0.143228 },
+    { r: 0.762373, g: 0.876424, b: 0.137064 },
+    { r: 0.772852, g: 0.877868, b: 0.131109 },
+    { r: 0.783315, g: 0.879285, b: 0.125405 },
+    { r: 0.793760, g: 0.880678, b: 0.120005 },
+    { r: 0.804182, g: 0.882046, b: 0.114965 },
+    { r: 0.814576, g: 0.883393, b: 0.110347 },
+    { r: 0.824940, g: 0.884720, b: 0.106217 },
+    { r: 0.835270, g: 0.886029, b: 0.102646 },
+    { r: 0.845561, g: 0.887322, b: 0.099702 },
+    { r: 0.855810, g: 0.888601, b: 0.097452 },
+    { r: 0.866013, g: 0.889868, b: 0.095953 },
+    { r: 0.876168, g: 0.891125, b: 0.095250 },
+    { r: 0.886271, g: 0.892374, b: 0.095374 },
+    { r: 0.896320, g: 0.893616, b: 0.096335 },
+    { r: 0.906311, g: 0.894855, b: 0.098125 },
+    { r: 0.916242, g: 0.896091, b: 0.100717 },
+    { r: 0.926106, g: 0.897330, b: 0.104071 },
+    { r: 0.935904, g: 0.898570, b: 0.108131 },
+    { r: 0.945636, g: 0.899815, b: 0.112838 },
+    { r: 0.955300, g: 0.901065, b: 0.118128 },
+    { r: 0.964894, g: 0.902323, b: 0.123941 },
+    { r: 0.974417, g: 0.903590, b: 0.130215 },
+    { r: 0.983868, g: 0.904867, b: 0.136897 },
+    { r: 0.993248, g: 0.906157, b: 0.143936 }
+  ],
+  metadata: { source: 'matplotlib', category: 'perceptually_uniform' }
+};
+
+// Initialize viridis immediately
+colormapCache.set('viridis', viridisColormap);
+
+// Export synchronous access (will be populated with available names after index loads)
+export let colormaps: ColorMap[] = [viridisColormap];
+
+export async function getColormapNames(): Promise<string[]> {
+  const names = await loadColormapIndex();
+  return names;
+}
+
+export async function getColormap(name: string): Promise<ColorMap | null> {
+  // Return viridis immediately if requested
+  if (name === 'viridis') {
+    return viridisColormap;
+  }
+  
+  // Load the requested colormap lazily
+  return await loadSingleColormap(name);
 }
 
 export function getColormapsByCategory(category: string): ColorMap[] {
@@ -65,5 +373,5 @@ export function getAvailableCategories(): string[] {
 }
 
 export function getAllColormapNames(): string[] {
-  return colormaps.map(cm => cm.name);
+  return colormapNames.length > 0 ? colormapNames : ['viridis'];
 }
