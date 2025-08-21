@@ -1,0 +1,196 @@
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light;
+  color: #213547;
+  background-color: #ffffff;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+#app {
+  width: 100%;
+  padding: 1rem;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.header h1 {
+  font-size: 1.8rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.controls {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.controls select {
+  padding: 0.5rem;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: white;
+  cursor: pointer;
+}
+
+.visualization-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(10, minmax(40px, 1fr));
+  gap: 1rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  height: calc(100vh - 150px);
+}
+
+.viz-panel {
+  background: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 0.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.viz-panel h3 {
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  color: #666;
+}
+
+.viz-panel canvas {
+  width: 100%;
+  height: calc(100% - 2rem);
+  display: block;
+}
+
+.colormap-strip {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.perceptual-delta {
+  grid-column: 1;
+  grid-row: 2 / 5;
+}
+
+.grayscale-strip {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.lightness-delta {
+  grid-column: 2;
+  grid-row: 2 / 5;
+}
+
+.deuteranomaly {
+  grid-column: 1;
+  grid-row: 5;
+}
+
+.deuteranopia {
+  grid-column: 1;
+  grid-row: 6;
+}
+
+.protanomaly {
+  grid-column: 2;
+  grid-row: 5;
+}
+
+.protanopia {
+  grid-column: 2;
+  grid-row: 6;
+}
+
+.color-space-3d {
+  grid-column: 1 / 3;
+  grid-row: 7 / 11;
+}
+
+.test-image-1 {
+  grid-column: 3;
+  grid-row: 1 / 4;
+}
+
+.test-image-1-cb {
+  grid-column: 4;
+  grid-row: 1 / 4;
+}
+
+.test-image-2 {
+  grid-column: 3;
+  grid-row: 4 / 7;
+}
+
+.test-image-2-cb {
+  grid-column: 4;
+  grid-row: 4 / 7;
+}
+
+.test-image-3 {
+  grid-column: 3 / 5;
+  grid-row: 7 / 9;
+}
+
+.test-image-3-cb {
+  grid-column: 3 / 5;
+  grid-row: 9 / 11;
+}
+
+.plot-container {
+  width: 100%;
+  height: calc(100% - 2rem);
+}
+
+.stats {
+  position: absolute;
+  bottom: 0.5rem;
+  right: 0.5rem;
+  font-size: 0.75rem;
+  color: #666;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 0.25rem 0.5rem;
+  border-radius: 3px;
+}
+
+@media (max-width: 1200px) {
+  .visualization-grid {
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: auto;
+    height: auto;
+  }
+  
+  .viz-panel {
+    grid-column: auto !important;
+    grid-row: auto !important;
+    min-height: 200px;
+  }
+}
