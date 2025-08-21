@@ -32,21 +32,26 @@ body {
 }
 
 .header {
-  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   margin-bottom: 1rem;
+  padding: 0.5rem 0;
+  position: relative;
 }
 
 .header h1 {
   font-size: 1.8rem;
   font-weight: 600;
-  margin-bottom: 0.5rem;
+  margin: 0;
+  position: absolute;
+  left: 0;
 }
 
 .controls {
   display: flex;
   gap: 1rem;
-  justify-content: center;
-  margin-bottom: 1.5rem;
+  align-items: center;
 }
 
 .controls select {
@@ -65,7 +70,7 @@ body {
   gap: 1rem;
   max-width: 1400px;
   margin: 0 auto;
-  height: calc(100vh - 150px);
+  height: calc(100vh - 100px);
 }
 
 .viz-panel {
@@ -84,15 +89,40 @@ body {
   color: #666;
 }
 
+.colormap-strip h3,
+.grayscale-strip h3,
+.deuteranopia h3,
+.protanopia h3 {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  margin: 0;
+  padding: 0.25rem 0.5rem;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 3px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #333;
+  z-index: 1;
+}
+
 .viz-panel canvas {
   width: 100%;
   height: calc(100% - 2rem);
   display: block;
 }
 
+.colormap-strip canvas,
+.grayscale-strip canvas,
+.deuteranopia canvas,
+.protanopia canvas {
+  height: 100%;
+}
+
 .colormap-strip {
   grid-column: 1;
   grid-row: 1;
+  position: relative;
 }
 
 .perceptual-delta {
@@ -103,6 +133,7 @@ body {
 .grayscale-strip {
   grid-column: 2;
   grid-row: 1;
+  position: relative;
 }
 
 .lightness-delta {
@@ -110,59 +141,51 @@ body {
   grid-row: 2 / 5;
 }
 
-.deuteranomaly {
-  grid-column: 1;
-  grid-row: 5;
-}
-
 .deuteranopia {
   grid-column: 1;
-  grid-row: 6;
-}
-
-.protanomaly {
-  grid-column: 2;
   grid-row: 5;
+  position: relative;
 }
 
 .protanopia {
   grid-column: 2;
-  grid-row: 6;
+  grid-row: 5;
+  position: relative;
 }
 
 .color-space-3d {
   grid-column: 1 / 3;
-  grid-row: 7 / 11;
+  grid-row: 6 / 11;
 }
 
 .test-image-1 {
   grid-column: 3;
-  grid-row: 1 / 4;
+  grid-row: 1 / 3;  /* Test pattern in colormap */
 }
 
 .test-image-1-cb {
   grid-column: 4;
-  grid-row: 1 / 4;
+  grid-row: 1 / 3;  /* Test pattern in grayscale */
 }
 
 .test-image-2 {
   grid-column: 3;
-  grid-row: 4 / 7;
+  grid-row: 3 / 5;  /* Test pattern (Deuteranopia) */
 }
 
 .test-image-2-cb {
   grid-column: 4;
-  grid-row: 4 / 7;
+  grid-row: 3 / 5;  /* Test pattern (Protanopia) */
 }
 
 .test-image-3 {
   grid-column: 3 / 5;
-  grid-row: 7 / 9;
+  grid-row: 7 / 9;  /* Sine wave pattern */
 }
 
 .test-image-3-cb {
   grid-column: 3 / 5;
-  grid-row: 9 / 11;
+  grid-row: 9 / 11;  /* Sine wave (Deuteranopia) */
 }
 
 .plot-container {

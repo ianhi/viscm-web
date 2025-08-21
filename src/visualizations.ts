@@ -50,7 +50,7 @@ export function drawLineChart(container: HTMLElement, values: number[], title: s
       zerolinecolor: '#999',
       zerolinewidth: 1
     },
-    margin: { l: 50, r: 20, t: 20, b: 40 },
+    margin: { l: 40, r: 10, t: 10, b: 30 },
     paper_bgcolor: 'rgba(0,0,0,0)',
     plot_bgcolor: 'rgba(0,0,0,0)',
     font: { size: 10 },
@@ -119,9 +119,9 @@ export function draw3DColorSpace(container: HTMLElement, colormap: ColorMap) {
   // Calculate ranges with minimum sizes to avoid noisy plots
   const minAxisRange = 20; // Minimum range for any axis
   
-  const xRange = [Math.min(...coords.x), Math.max(...coords.x)];
-  const yRange = [Math.min(...coords.y), Math.max(...coords.y)];
-  const zRange = [Math.min(...coords.z), Math.max(...coords.z)];
+  const xRange: [number, number] = [Math.min(...coords.x), Math.max(...coords.x)];
+  const yRange: [number, number] = [Math.min(...coords.y), Math.max(...coords.y)];
+  const zRange: [number, number] = [Math.min(...coords.z), Math.max(...coords.z)];
   
   // Expand ranges if they're too small
   function ensureMinRange(range: [number, number], minRange: number): [number, number] {
