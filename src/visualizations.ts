@@ -1,6 +1,8 @@
 import { RGB, ColorMap } from './types';
 import { simulate } from '@bjornlu/colorblind';
 import * as Plotly from 'plotly.js-dist';
+import * as d3Scale from 'd3-scale';
+import Color from 'colorjs.io';
 import { getLab3DCoordinates } from './analysis';
 
 export function drawColormapStrip(canvas: HTMLCanvasElement, colors: RGB[]) {
@@ -160,28 +162,37 @@ export function generateTestPattern(width: number, height: number): ImageData {
   canvas.height = height;
   const ctx = canvas.getContext('2d')!;
   
-  // Create a simple test pattern with gradients and shapes
-  const gradient = ctx.createLinearGradient(0, 0, width, height);
-  gradient.addColorStop(0, '#000');
-  gradient.addColorStop(1, '#fff');
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, width, height);
+  // Create imageData directly for better control
+  const imageData = ctx.createImageData(width, height);
   
-  // Add some circles
-  for (let i = 0; i < 5; i++) {
-    for (let j = 0; j < 5; j++) {
-      const x = (i + 0.5) * (width / 5);
-      const y = (j + 0.5) * (height / 5);
-      const intensity = (i * 5 + j) / 24;
+  // Create a more sophisticated test pattern with mathematical functions
+  // This creates interesting structures that test colormap performance
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const pixelIndex = (y * width + x) * 4;
       
-      ctx.beginPath();
-      ctx.arc(x, y, width / 20, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(${intensity * 255}, ${intensity * 255}, ${intensity * 255}, 1)`;
-      ctx.fill();
+      // Normalize coordinates to 0-1
+      const nx = x / (width - 1);
+      const ny = y / (height - 1);
+      
+      // Create a complex pattern using multiple mathematical functions
+      // This tests how well the colormap preserves structure
+      const pattern1 = Math.sin(nx * Math.PI * 4) * Math.cos(ny * Math.PI * 4);
+      const pattern2 = Math.exp(-((nx - 0.5) ** 2 + (ny - 0.5) ** 2) * 8);
+      const pattern3 = Math.sin(nx * ny * Math.PI * 8);
+      
+      // Combine patterns and normalize to 0-1
+      const value = (pattern1 * 0.4 + pattern2 * 0.4 + pattern3 * 0.2 + 1) / 2;
+      const intensity = Math.max(0, Math.min(1, value)) * 255;
+      
+      imageData.data[pixelIndex] = intensity;     // R
+      imageData.data[pixelIndex + 1] = intensity; // G
+      imageData.data[pixelIndex + 2] = intensity; // B
+      imageData.data[pixelIndex + 3] = 255;       // A
     }
   }
   
-  return ctx.getImageData(0, 0, width, height);
+  return imageData;
 }
 
 export function applyColormapToImage(imageData: ImageData, colormap: ColorMap): ImageData {
@@ -191,13 +202,27 @@ export function applyColormapToImage(imageData: ImageData, colormap: ColorMap): 
     imageData.height
   );
   
+  // Create a d3 scale for mapping intensity to colormap
+  const scale = d3Scale.scaleLinear<RGB>()
+    .domain([0, 1])
+    .range([colormap.colors[0], colormap.colors[colormap.colors.length - 1]])
+    .interpolate(() => (t: number) => {
+      const index = Math.round(t * (colormap.colors.length - 1));
+      return colormap.colors[Math.min(index, colormap.colors.length - 1)];
+    });
+  
   for (let i = 0; i < result.data.length; i += 4) {
-    // Convert to grayscale
-    const gray = (result.data[i] * 0.299 + result.data[i + 1] * 0.587 + result.data[i + 2] * 0.114) / 255;
+    // Use color.js for proper RGB to grayscale conversion
+    const c = new Color('srgb', [
+      result.data[i] / 255,
+      result.data[i + 1] / 255,
+      result.data[i + 2] / 255
+    ]);
+    const lab = c.to('lab');
+    const gray = lab.coords[0] / 100; // L* normalized to 0-1
     
-    // Map to colormap
-    const index = Math.floor(gray * (colormap.colors.length - 1));
-    const color = colormap.colors[index];
+    // Map to colormap using d3 scale
+    const color = scale(gray);
     
     result.data[i] = Math.round(color.r * 255);
     result.data[i + 1] = Math.round(color.g * 255);

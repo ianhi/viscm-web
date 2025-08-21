@@ -1,4 +1,6 @@
 import Color from 'colorjs.io';
+import * as ss from 'simple-statistics';
+import * as d3 from 'd3-array';
 import { RGB, PerceptualStats } from './types';
 
 export function rgbToLab(color: RGB): [number, number, number] {
@@ -15,34 +17,24 @@ export function calculateDeltaE(color1: RGB, color2: RGB): number {
 }
 
 export function calculatePerceptualDeltas(colors: RGB[]): number[] {
-  const deltas: number[] = [];
-  for (let i = 1; i < colors.length; i++) {
-    deltas.push(calculateDeltaE(colors[i - 1], colors[i]));
-  }
-  return deltas;
+  // Use d3.pairs to create adjacent pairs, then map to deltaE
+  return d3.pairs(colors).map(([color1, color2]) => calculateDeltaE(color1, color2));
 }
 
 export function calculateLightnessDeltas(colors: RGB[]): number[] {
-  const deltas: number[] = [];
-  for (let i = 1; i < colors.length; i++) {
-    const [l1] = rgbToLab(colors[i - 1]);
-    const [l2] = rgbToLab(colors[i]);
-    deltas.push(l2 - l1);
-  }
-  return deltas;
+  // Convert to lightness values first, then use d3.pairs for differences
+  const lightness = colors.map(color => rgbToLab(color)[0]);
+  return d3.pairs(lightness).map(([l1, l2]) => l2 - l1);
 }
 
 export function calculateStats(deltas: number[]): PerceptualStats {
-  const totalLength = deltas.reduce((sum, d) => sum + Math.abs(d), 0);
-  const mean = totalLength / deltas.length;
-  const variance = deltas.reduce((sum, d) => sum + Math.pow(d - mean, 2), 0) / deltas.length;
-  const rmsDeviation = Math.sqrt(variance);
+  const absDeltas = deltas.map(d => Math.abs(d));
   
   return {
-    totalLength,
-    rmsDeviation,
-    maxDelta: Math.max(...deltas),
-    minDelta: Math.min(...deltas)
+    totalLength: d3.sum(absDeltas),
+    rmsDeviation: ss.rootMeanSquare(deltas),
+    maxDelta: d3.max(deltas) ?? 0,
+    minDelta: d3.min(deltas) ?? 0
   };
 }
 
@@ -62,16 +54,11 @@ export function toGrayscale(colors: RGB[]): RGB[] {
 }
 
 export function getLab3DCoordinates(colors: RGB[]): { x: number[], y: number[], z: number[] } {
-  const x: number[] = [];
-  const y: number[] = [];
-  const z: number[] = [];
+  const coords = colors.map(color => rgbToLab(color));
   
-  for (const color of colors) {
-    const [l, a, b] = rgbToLab(color);
-    x.push(a);
-    y.push(b);
-    z.push(l);
-  }
-  
-  return { x, y, z };
+  return {
+    x: coords.map(([, a]) => a),  // a* values
+    y: coords.map(([, , b]) => b), // b* values
+    z: coords.map(([l]) => l)      // L* values
+  };
 }
