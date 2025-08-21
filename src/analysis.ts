@@ -18,38 +18,15 @@ export function calculateDeltaE(color1: RGB, color2: RGB): number {
 
 export function calculatePerceptualDeltas(colors: RGB[]): number[] {
   // Use d3.pairs to create adjacent pairs, then map to deltaE
-  const rawDeltas = d3.pairs(colors).map(([color1, color2]) => calculateDeltaE(color1, color2));
-  
-  // Apply light smoothing to reduce noise while preserving trends
-  return smoothArray(rawDeltas, 3);
+  return d3.pairs(colors).map(([color1, color2]) => calculateDeltaE(color1, color2));
 }
 
 export function calculateLightnessDeltas(colors: RGB[]): number[] {
   // Convert to lightness values first, then use d3.pairs for differences
   const lightness = colors.map(color => rgbToLab(color)[0]);
-  const rawDeltas = d3.pairs(lightness).map(([l1, l2]) => l2 - l1);
-  
-  // Apply light smoothing to reduce noise while preserving trends
-  return smoothArray(rawDeltas, 3);
+  return d3.pairs(lightness).map(([l1, l2]) => l2 - l1);
 }
 
-// Simple moving average smoothing
-function smoothArray(arr: number[], windowSize: number): number[] {
-  if (windowSize <= 1) return arr;
-  
-  const result: number[] = [];
-  const halfWindow = Math.floor(windowSize / 2);
-  
-  for (let i = 0; i < arr.length; i++) {
-    const start = Math.max(0, i - halfWindow);
-    const end = Math.min(arr.length, i + halfWindow + 1);
-    const slice = arr.slice(start, end);
-    const avg = d3.mean(slice) ?? arr[i];
-    result.push(avg);
-  }
-  
-  return result;
-}
 
 export function calculateStats(deltas: number[]): PerceptualStats {
   const absDeltas = deltas.map(d => Math.abs(d));
