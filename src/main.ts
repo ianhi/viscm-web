@@ -17,10 +17,8 @@ import {
 
 class ColormapVisualizer {
   private currentColormap = colormaps[0];
-  private testImage: ImageData;
   
   constructor() {
-    this.testImage = generateTestPattern(200, 200);
     this.initializeUI();
     this.updateVisualization();
   }
@@ -193,16 +191,16 @@ class ColormapVisualizer {
     
     // Draw color blindness simulations
     const deuteranomalyCanvas = document.getElementById('deuteranomaly-canvas') as HTMLCanvasElement;
-    drawColorBlindSimulation(deuteranomalyCanvas, colors, 'deuteranopia', 0.5);
+    drawColorBlindSimulation(deuteranomalyCanvas, colors, 'deuteranopia');
     
     const deuteranopiaCanvas = document.getElementById('deuteranopia-canvas') as HTMLCanvasElement;
-    drawColorBlindSimulation(deuteranopiaCanvas, colors, 'deuteranopia', 1);
+    drawColorBlindSimulation(deuteranopiaCanvas, colors, 'deuteranopia');
     
     const protanomalyCanvas = document.getElementById('protanomaly-canvas') as HTMLCanvasElement;
-    drawColorBlindSimulation(protanomalyCanvas, colors, 'protanopia', 0.5);
+    drawColorBlindSimulation(protanomalyCanvas, colors, 'protanopia');
     
     const protanopiaCanvas = document.getElementById('protanopia-canvas') as HTMLCanvasElement;
-    drawColorBlindSimulation(protanopiaCanvas, colors, 'protanopia', 1);
+    drawColorBlindSimulation(protanopiaCanvas, colors, 'protanopia');
     
     // Draw 3D color space
     const plotContainer = document.getElementById('color-space-plot')!;
@@ -303,4 +301,18 @@ class ColormapVisualizer {
 }
 
 // Initialize the application
-new ColormapVisualizer();
+try {
+  console.log('Starting ColormapVisualizer...');
+  new ColormapVisualizer();
+  console.log('ColormapVisualizer started successfully');
+} catch (error) {
+  console.error('Failed to initialize ColormapVisualizer:', error);
+  const app = document.querySelector<HTMLDivElement>('#app');
+  if (app) {
+    app.innerHTML = `<div style="color: red; padding: 20px;">
+      <h2>Error Loading Application</h2>
+      <pre>${error}</pre>
+      <p>Check browser console for details.</p>
+    </div>`;
+  }
+}

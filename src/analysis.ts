@@ -1,6 +1,5 @@
 import chroma from 'chroma-js';
 import { RGB, PerceptualStats } from './types';
-import * as d3 from 'd3-color';
 
 export function rgbToLab(color: RGB): [number, number, number] {
   const c = chroma(color.r * 255, color.g * 255, color.b * 255);

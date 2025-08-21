@@ -1,6 +1,6 @@
 import { RGB, ColorMap } from './types';
-import { simulateColorBlindness } from '@bjornlu/colorblind';
-import Plotly from 'plotly.js-dist';
+import { simulate } from '@bjornlu/colorblind';
+import * as Plotly from 'plotly.js-dist';
 import { getLab3DCoordinates } from './analysis';
 
 export function drawColormapStrip(canvas: HTMLCanvasElement, colors: RGB[]) {
@@ -84,21 +84,20 @@ export function drawLineChart(canvas: HTMLCanvasElement, values: number[], label
 export function drawColorBlindSimulation(
   canvas: HTMLCanvasElement, 
   colors: RGB[], 
-  type: 'protanopia' | 'deuteranopia' | 'tritanopia' | 'achromatopsia',
-  severity: number = 1
+  type: 'protanopia' | 'deuteranopia' | 'tritanopia' | 'achromatopsia'
 ) {
   const simulatedColors = colors.map(color => {
-    const rgb = [
-      Math.round(color.r * 255),
-      Math.round(color.g * 255),
-      Math.round(color.b * 255)
-    ] as [number, number, number];
+    const rgb = {
+      r: Math.round(color.r * 255),
+      g: Math.round(color.g * 255),
+      b: Math.round(color.b * 255)
+    };
     
-    const simulated = simulateColorBlindness(rgb, type, severity);
+    const simulated = simulate(rgb, type);
     return {
-      r: simulated[0] / 255,
-      g: simulated[1] / 255,
-      b: simulated[2] / 255
+      r: simulated.r / 255,
+      g: simulated.g / 255,
+      b: simulated.b / 255
     };
   });
   
