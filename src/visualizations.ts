@@ -39,21 +39,28 @@ export function drawLineChart(canvas: HTMLCanvasElement, values: number[], label
   ctx.lineTo(padding, height - padding);
   ctx.stroke();
   
-  // Draw zero line if we have negative values
+  // Calculate axis range with minimum extent
   const minVal = Math.min(...values, 0);
   const maxVal = Math.max(...values, 0);
-  const range = maxVal - minVal || 1;
+  const rawRange = maxVal - minVal;
+  const minRange = Math.max(rawRange, Math.abs(maxVal) * 0.1, Math.abs(minVal) * 0.1, 1);
   
-  if (minVal < 0) {
-    const zeroY = height - padding - ((-minVal / range) * (height - 2 * padding));
-    ctx.strokeStyle = '#999';
-    ctx.setLineDash([5, 5]);
-    ctx.beginPath();
-    ctx.moveTo(padding, zeroY);
-    ctx.lineTo(width - padding, zeroY);
-    ctx.stroke();
-    ctx.setLineDash([]);
-  }
+  // Expand range symmetrically around center for better visualization
+  const center = (maxVal + minVal) / 2;
+  const halfRange = minRange / 2;
+  const adjustedMinVal = center - halfRange;
+  const adjustedMaxVal = center + halfRange;
+  
+  // Draw zero line
+  const range = adjustedMaxVal - adjustedMinVal;
+  const zeroY = height - padding - ((-adjustedMinVal / range) * (height - 2 * padding));
+  ctx.strokeStyle = '#999';
+  ctx.setLineDash([5, 5]);
+  ctx.beginPath();
+  ctx.moveTo(padding, zeroY);
+  ctx.lineTo(width - padding, zeroY);
+  ctx.stroke();
+  ctx.setLineDash([]);
   
   // Draw the line
   ctx.strokeStyle = '#2166ac';
@@ -62,7 +69,7 @@ export function drawLineChart(canvas: HTMLCanvasElement, values: number[], label
   
   for (let i = 0; i < values.length; i++) {
     const x = padding + (i / (values.length - 1)) * (width - 2 * padding);
-    const y = height - padding - ((values[i] - minVal) / range) * (height - 2 * padding);
+    const y = height - padding - ((values[i] - adjustedMinVal) / range) * (height - 2 * padding);
     
     if (i === 0) {
       ctx.moveTo(x, y);
