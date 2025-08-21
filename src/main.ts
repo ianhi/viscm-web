@@ -310,17 +310,13 @@ class ColormapVisualizer {
 
     app.innerHTML = `
       <div class="header">
-        <h1>Colormap Visualization</h1>
+        <div class="title-section">
+          <h1>Colormap Visualization</h1>
+          <button id="about-button" class="about-button">About</button>
+        </div>
         <div class="controls">
           <select id="colormap-select">
             <option value="">Loading colormaps...</option>
-          </select>
-          <select id="deltae-method">
-            <option value="2000">ΔE 2000</option>
-            <option value="76">ΔE 76</option>
-            <option value="CMC">ΔE CMC</option>
-            <option value="ITP">ΔE ITP</option>
-            <option value="Jz">ΔE Jz</option>
           </select>
         </div>
       </div>
@@ -332,7 +328,16 @@ class ColormapVisualizer {
         </div>
         
         <div class="viz-panel perceptual-delta">
-          <h3>Perceptual Derivative (ΔE)</h3>
+          <div class="panel-header">
+            <h3>Perceptual Derivative (ΔE)</h3>
+            <select id="deltae-method" class="panel-control">
+              <option value="2000">ΔE 2000</option>
+              <option value="76">ΔE 76</option>
+              <option value="CMC">ΔE CMC</option>
+              <option value="ITP">ΔE ITP</option>
+              <option value="Jz">ΔE Jz</option>
+            </select>
+          </div>
           <div id="perceptual-delta-plot" class="plot-container"></div>
         </div>
         
@@ -391,6 +396,48 @@ class ColormapVisualizer {
           <canvas id="test-image-3-cb"></canvas>
         </div>
       </div>
+
+      <!-- About Modal -->
+      <div id="about-modal" class="modal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2>About Colormap Visualization</h2>
+            <button id="modal-close" class="modal-close">&times;</button>
+          </div>
+          <div class="modal-body">
+            <p>This interactive colormap visualization tool is inspired by and based on the <strong>viscm</strong> (VISualize ColorMap) Python package, originally developed by <a href="https://github.com/matplotlib/viscm" target="_blank" rel="noopener">matplotlib</a>.</p>
+            
+            <h3>Origins</h3>
+            <p>The viscm package was created to help researchers and data visualization practitioners evaluate colormaps for perceptual uniformity and accessibility. This web implementation brings those powerful analysis tools to the browser, making colormap evaluation more accessible to everyone.</p>
+            
+            <h3>Learn More</h3>
+            <ul>
+              <li><a href="https://github.com/matplotlib/viscm" target="_blank" rel="noopener">📦 Original viscm Python package</a></li>
+              <li><a href="https://www.youtube.com/watch?v=xAoljeRJ3lU" target="_blank" rel="noopener">🎥 "How Bad Is Your Colormap?" - SciPy 2015 Talk</a></li>
+              <li><a href="https://github.com/ianhi/viscm-web" target="_blank" rel="noopener">💻 This project's source code</a></li>
+              <li><a href="https://ianhuntisaak.com" target="_blank" rel="noopener">👤 Author's website</a></li>
+            </ul>
+            
+            <h3>Features</h3>
+            <ul>
+              <li><strong>Perceptual Analysis:</strong> Multiple <a href="https://colorjs.io/docs/color-difference" target="_blank" rel="noopener">ΔE metrics</a> for accurate color difference measurement</li>
+              <li><strong>Color Vision Simulation:</strong> Accurate deuteranopia and protanopia simulation</li>
+              <li><strong>Test Data:</strong> Authentic Mt. St. Helens elevation data from viscm examples</li>
+              <li><strong>3D Visualization:</strong> Interactive L*a*b* color space plotting</li>
+              <li><strong>Real-time Analysis:</strong> Instant feedback on colormap changes</li>
+            </ul>
+
+            <h3>Technical Resources</h3>
+            <ul>
+              <li><a href="https://colorjs.io/" target="_blank" rel="noopener">🎨 Color.js - Advanced color science library</a></li>
+              <li><a href="https://github.com/bjornlu/colorblind" target="_blank" rel="noopener">👁️ @bjornlu/colorblind - Color vision simulation</a></li>
+              <li><a href="https://plotly.com/javascript/" target="_blank" rel="noopener">📊 Plotly.js - Interactive visualizations</a></li>
+            </ul>
+            
+            <p class="credits">Built with modern web technologies and scientific accuracy in mind. Uses established color science libraries and authentic test data for reliable colormap evaluation.</p>
+          </div>
+        </div>
+      </div>
     `;
 
     // Add event listeners
@@ -427,6 +474,33 @@ class ColormapVisualizer {
       const target = e.target as HTMLSelectElement;
       this.deltaEMethod = target.value;
       this.updatePerceptualAnalysis();
+    });
+
+    // About modal event listeners
+    const aboutButton = document.getElementById('about-button') as HTMLButtonElement;
+    const aboutModal = document.getElementById('about-modal') as HTMLDivElement;
+    const modalClose = document.getElementById('modal-close') as HTMLButtonElement;
+
+    aboutButton.addEventListener('click', () => {
+      aboutModal.classList.add('modal-open');
+    });
+
+    modalClose.addEventListener('click', () => {
+      aboutModal.classList.remove('modal-open');
+    });
+
+    // Close modal when clicking outside content
+    aboutModal.addEventListener('click', (e) => {
+      if (e.target === aboutModal) {
+        aboutModal.classList.remove('modal-open');
+      }
+    });
+
+    // Close modal with Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && aboutModal.classList.contains('modal-open')) {
+        aboutModal.classList.remove('modal-open');
+      }
     });
 
     // Setup canvases

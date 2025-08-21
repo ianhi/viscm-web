@@ -40,12 +40,18 @@ body {
   position: relative;
 }
 
+.title-section {
+  position: absolute;
+  left: 0;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
 .header h1 {
   font-size: 1.8rem;
   font-weight: 600;
   margin: 0;
-  position: absolute;
-  left: 0;
 }
 
 .controls {
@@ -54,13 +60,33 @@ body {
   align-items: center;
 }
 
-.controls select {
+.controls select,
+.controls .about-button {
   padding: 0.5rem;
   font-size: 1rem;
   border: 1px solid #ccc;
   border-radius: 4px;
   background: white;
   cursor: pointer;
+}
+
+.about-button {
+  color: white;
+  background: #0066cc;
+  border: 1px solid #0066cc;
+  border-radius: 4px;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.about-button:hover {
+  background: #0052a3;
+  border-color: #0052a3;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 102, 204, 0.3);
 }
 
 .visualization-grid {
@@ -87,6 +113,26 @@ body {
   font-weight: 500;
   margin-bottom: 0.5rem;
   color: #666;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.panel-header h3 {
+  margin-bottom: 0;
+}
+
+.panel-control {
+  font-size: 0.8rem;
+  padding: 0.25rem 0.4rem;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  background: white;
+  cursor: pointer;
 }
 
 .colormap-strip h3,
@@ -235,6 +281,132 @@ body {
   border-radius: 3px;
 }
 
+/* Modal Styles */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.modal.modal-open {
+  display: flex;
+  opacity: 1;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 8px;
+  max-width: 600px;
+  max-height: 80vh;
+  width: 90%;
+  overflow: hidden;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  transform: scale(0.8);
+  transition: transform 0.3s ease;
+}
+
+.modal.modal-open .modal-content {
+  transform: scale(1);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid #eee;
+  background: #f8f9fa;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #666;
+  cursor: pointer;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+}
+
+.modal-close:hover {
+  background: #e9ecef;
+  color: #333;
+}
+
+.modal-body {
+  padding: 1.5rem;
+  overflow-y: auto;
+  max-height: calc(80vh - 120px);
+}
+
+.modal-body h3 {
+  margin: 1.5rem 0 0.5rem 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.modal-body h3:first-child {
+  margin-top: 0;
+}
+
+.modal-body p {
+  margin-bottom: 1rem;
+  line-height: 1.6;
+  color: #555;
+}
+
+.modal-body ul {
+  margin-bottom: 1rem;
+  padding-left: 1.5rem;
+}
+
+.modal-body li {
+  margin-bottom: 0.5rem;
+  line-height: 1.6;
+  color: #555;
+}
+
+.modal-body a {
+  color: #0066cc;
+  text-decoration: none;
+}
+
+.modal-body a:hover {
+  text-decoration: underline;
+}
+
+.modal-body .credits {
+  font-style: italic;
+  color: #777;
+  border-top: 1px solid #eee;
+  padding-top: 1rem;
+  margin-top: 1.5rem;
+}
+
 @media (max-width: 1200px) {
   .visualization-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -246,5 +418,14 @@ body {
     grid-column: auto !important;
     grid-row: auto !important;
     min-height: 200px;
+  }
+
+  .modal-content {
+    width: 95%;
+    margin: 1rem;
+  }
+  
+  .modal-body {
+    padding: 1rem;
   }
 }

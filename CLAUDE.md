@@ -23,7 +23,9 @@ src/
 ├── colormaps.ts     # Colormap data (official matplotlib sources)
 ├── analysis.ts      # Color analysis functions using libraries
 ├── visualizations.ts # Plotting functions using Plotly.js
-├── main.ts          # Main application with CSS Grid layout
+├── main.ts          # Main application with CSS Grid layout and About modal
+├── worker.ts        # Cloudflare Workers deployment handler
+├── test-image-data.ts # Mt. St. Helens elevation data processing
 └── types.ts         # TypeScript interfaces
 ```
 
@@ -65,9 +67,24 @@ src/
 - Leverage d3-array for data transformations
 
 ## Build and Deployment
+
+### Local Development
 ```bash
+npm run dev      # Start development server
 npm run build    # Creates dist/ folder
 npm run preview  # Preview production build
+```
+
+### Cloudflare Workers Deployment
+```bash
+npm run cf:login  # Login to Cloudflare (first time only)
+npm run cf:deploy # Deploy to Cloudflare Workers
+npm run cf:dev    # Local development with Cloudflare
+```
+
+### GitHub Pages (Alternative)
+```bash
+npm run deploy   # Deploy to GitHub Pages
 ```
 
 ## Testing
@@ -91,6 +108,19 @@ npm run preview  # Preview production build
 - **Required**: Use proper color space conversions (L*a*b*, deltaE 2000)
 - **Forbidden**: Custom color distance approximations
 - **Reason**: Perceptual accuracy is fundamental to colormap evaluation
+
+## UI Components
+
+### About Modal
+- **Location**: Accessible via blue "About" button next to the title
+- **Content**: Project origins, links to viscm, YouTube video, and technical resources
+- **Functionality**: Modal with backdrop, Escape key support, click-outside closing
+- **Styling**: Professional design with smooth animations
+
+### Layout Structure
+- **Header**: Title with About button on left, controls (colormap/deltaE selectors) on right
+- **Grid**: 4x10 CSS Grid matching viscm's layout structure
+- **Responsive**: Adapts to smaller screens with 2-column layout
 
 ## Best Practices
 - Keep implementations simple using proven libraries
