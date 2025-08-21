@@ -173,7 +173,8 @@ class ColormapVisualizer {
     const pStatsEl = document.getElementById('perceptual-stats')!;
     pStatsEl.innerHTML = `
       Length: ${pStats.totalLength.toFixed(1)}<br>
-      RMS: ${pStats.rmsDeviation.toFixed(2)} (${(100 * pStats.rmsDeviation / pStats.totalLength).toFixed(1)}%)
+      RMS: ${pStats.rmsDeviation.toFixed(2)} (${(100 * pStats.rmsDeviation / pStats.totalLength).toFixed(1)}%)<br>
+      <small>Points: ${perceptualDeltas.length}</small>
     `;
     
     // Calculate and draw lightness deltas
@@ -186,7 +187,8 @@ class ColormapVisualizer {
     const lStatsEl = document.getElementById('lightness-stats')!;
     lStatsEl.innerHTML = `
       Length: ${lStats.totalLength.toFixed(1)}<br>
-      RMS: ${lStats.rmsDeviation.toFixed(2)} (${(100 * lStats.rmsDeviation / lStats.totalLength).toFixed(1)}%)
+      RMS: ${lStats.rmsDeviation.toFixed(2)} (${(100 * lStats.rmsDeviation / lStats.totalLength).toFixed(1)}%)<br>
+      <small>Points: ${lightnessDeltas.length}</small>
     `;
     
     // Draw color blindness simulations

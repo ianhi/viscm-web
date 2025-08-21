@@ -1,7 +1,7 @@
 import { ColorMap, RGB } from './types';
 import chroma from 'chroma-js';
 
-function generateColormap(name: string, chromaScale: any, steps: number = 256): ColorMap {
+function generateColormap(name: string, chromaScale: any, steps: number = 64): ColorMap {
   const colors: RGB[] = [];
   for (let i = 0; i < steps; i++) {
     const t = i / (steps - 1);
