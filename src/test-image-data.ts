@@ -9,12 +9,28 @@ export async function loadViscmTestImage(): Promise<{ width: number; height: num
   }
   
   try {
-    // Load the compressed St. Helens elevation data
+    // Load the St. Helens elevation data
     const response = await fetch('./src/st-helens_before-modified.txt.gz');
-    const compressedData = await response.arrayBuffer();
+    const data = await response.arrayBuffer();
+    const uint8Array = new Uint8Array(data);
     
-    // Decompress the gzipped data
-    const decompressed = pako.inflate(new Uint8Array(compressedData), { to: 'string' });
+    // Check if data is already decompressed (dev server might auto-decompress)
+    let decompressed: string;
+    
+    // Check first few bytes to see if it's text (starts with 'nan') or gzipped
+    const firstBytes = Array.from(uint8Array.slice(0, 4));
+    const isText = firstBytes.every(byte => byte >= 32 && byte <= 126) && 
+                   String.fromCharCode(...firstBytes).startsWith('nan');
+    
+    if (isText) {
+      // Data is already decompressed (text format)
+      decompressed = new TextDecoder().decode(uint8Array);
+      console.log('St. Helens data was already decompressed by server');
+    } else {
+      // Data is compressed, decompress it
+      decompressed = pako.inflate(uint8Array, { to: 'string' });
+      console.log('St. Helens data decompressed using pako');
+    }
     
     // Parse the text data (space-separated elevation values)
     const lines = decompressed.trim().split('\n');

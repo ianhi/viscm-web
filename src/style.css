@@ -92,7 +92,21 @@ body {
 .colormap-strip h3,
 .grayscale-strip h3,
 .deuteranopia h3,
-.protanopia h3,
+.protanopia h3 {
+  position: absolute;
+  top: 0.25rem;
+  left: 0.25rem;
+  margin: 0;
+  padding: 0.1rem 0.3rem;
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 2px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #333;
+  z-index: 1;
+  line-height: 1;
+}
+
 .test-image-1 h3,
 .test-image-1-cb h3,
 .test-image-2 h3,
@@ -114,14 +128,21 @@ body {
 
 .viz-panel canvas {
   width: 100%;
-  height: calc(100% - 2rem);
+  height: 100%;
   display: block;
+  object-fit: cover;
 }
 
 .colormap-strip canvas,
 .grayscale-strip canvas,
 .deuteranopia canvas,
-.protanopia canvas {
+.protanopia canvas,
+.test-image-1 canvas,
+.test-image-1-cb canvas,
+.test-image-2 canvas,
+.test-image-2-cb canvas,
+.test-image-3 canvas,
+.test-image-3-cb canvas {
   height: 100%;
 }
 

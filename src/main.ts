@@ -532,7 +532,7 @@ class ColormapVisualizer {
 
   private async drawTestImages() {
     try {
-      // Load the official viscm test image
+      // Load the official viscm test image once
       const viscmData = await loadViscmTestImage();
       const viscmImageData = createImageDataFromViscm(viscmData);
 
@@ -554,16 +554,6 @@ class ColormapVisualizer {
         const scaledImageData = this.scaleImageData(viscmImageData, testCanvas1CB.width, testCanvas1CB.height);
         ctx1CB.putImageData(scaledImageData, 0, 0);
       }
-    } catch (error) {
-      console.error('Failed to load viscm test image, falling back to generated pattern:', error);
-      // Fallback to generated pattern
-      this.drawGeneratedTestImages();
-    }
-
-    try {
-      // Load the official viscm test image for rows 2-4
-      const viscmData = await loadViscmTestImage();
-      const viscmImageData = createImageDataFromViscm(viscmData);
 
       // Test pattern with deuteranopia simulation (row 2, left)
       const testCanvas2 = document.getElementById('test-image-2') as HTMLCanvasElement;
@@ -627,7 +617,7 @@ class ColormapVisualizer {
         ctx2CB.putImageData(simulatedData, 0, 0);
       }
 
-      // Use viscm test image for sine wave patterns too (rows 3-4)
+      // Use viscm test image for bottom row patterns too (rows 3-4)
       const testCanvas3 = document.getElementById('test-image-3') as HTMLCanvasElement;
       if (testCanvas3) {
         const ctx3 = testCanvas3.getContext('2d')!;
@@ -636,7 +626,7 @@ class ColormapVisualizer {
         ctx3.putImageData(coloredImage3, 0, 0);
       }
 
-      // Sine wave with color blindness
+      // Bottom pattern with color blindness
       const testCanvas3CB = document.getElementById('test-image-3-cb') as HTMLCanvasElement;
       if (testCanvas3CB) {
         const ctx3CB = testCanvas3CB.getContext('2d')!;
@@ -665,9 +655,11 @@ class ColormapVisualizer {
         
         ctx3CB.putImageData(simulatedData3, 0, 0);
       }
+      
     } catch (error) {
-      console.error('Failed to load viscm test image for colorblind tests, using generated patterns:', error);
-      // Fallback to generated patterns for these tests
+      console.error('Failed to load viscm test image, falling back to generated patterns:', error);
+      // Fallback to generated patterns for all tests
+      this.drawGeneratedTestImages();
     }
   }
 
