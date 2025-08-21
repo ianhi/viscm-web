@@ -92,7 +92,13 @@ body {
 .colormap-strip h3,
 .grayscale-strip h3,
 .deuteranopia h3,
-.protanopia h3 {
+.protanopia h3,
+.test-image-1 h3,
+.test-image-1-cb h3,
+.test-image-2 h3,
+.test-image-2-cb h3,
+.test-image-3 h3,
+.test-image-3-cb h3 {
   position: absolute;
   top: 0.5rem;
   left: 0.5rem;
@@ -160,22 +166,26 @@ body {
 
 .test-image-1 {
   grid-column: 3;
-  grid-row: 1 / 3;  /* Test pattern in colormap */
+  grid-row: 1 / 4;  /* Test pattern in colormap - taller */
+  position: relative;
 }
 
 .test-image-1-cb {
   grid-column: 4;
-  grid-row: 1 / 3;  /* Test pattern in grayscale */
+  grid-row: 1 / 4;  /* Test pattern in grayscale - taller */
+  position: relative;
 }
 
 .test-image-2 {
   grid-column: 3;
-  grid-row: 3 / 5;  /* Test pattern (Deuteranopia) */
+  grid-row: 4 / 7;  /* Test pattern (Deuteranopia) - taller */
+  position: relative;
 }
 
 .test-image-2-cb {
   grid-column: 4;
-  grid-row: 3 / 5;  /* Test pattern (Protanopia) */
+  grid-row: 4 / 7;  /* Test pattern (Protanopia) - taller */
+  position: relative;
 }
 
 .test-image-3 {

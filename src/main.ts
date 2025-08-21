@@ -1,9 +1,9 @@
 import './style.css';
-import { colormaps, getColormap, getColormapNames, getAllColormapNames } from './colormaps';
+import { getColormap, getColormapNames, getAllColormapNames } from './colormaps';
+import { ColorMap } from './types';
 import {
   calculatePerceptualDeltas,
   calculateLightnessDeltas,
-  calculateStats,
   toGrayscale
 } from './analysis';
 import {
@@ -14,9 +14,11 @@ import {
   generateTestPattern,
   applyColormapToImage
 } from './visualizations';
+import { simulate } from '@bjornlu/colorblind';
+import { loadViscmTestImage, createImageDataFromViscm } from './test-image-data';
 
 class ColormapVisualizer {
-  private currentColormap = {
+  private currentColormap: ColorMap = {
     name: 'viridis',
     colors: [
       { r: 0.267004, g: 0.004874, b: 0.329415 },
@@ -307,19 +309,18 @@ class ColormapVisualizer {
     app.innerHTML = `
       <div class="header">
         <h1>Colormap Visualization</h1>
-      </div>
-      
-      <div class="controls">
-        <select id="colormap-select">
-          <option value="">Loading colormaps...</option>
-        </select>
-        <select id="deltae-method">
-          <option value="2000">ΔE 2000</option>
-          <option value="76">ΔE 76</option>
-          <option value="CMC">ΔE CMC</option>
-          <option value="ITP">ΔE ITP</option>
-          <option value="Jz">ΔE Jz</option>
-        </select>
+        <div class="controls">
+          <select id="colormap-select">
+            <option value="">Loading colormaps...</option>
+          </select>
+          <select id="deltae-method">
+            <option value="2000">ΔE 2000</option>
+            <option value="76">ΔE 76</option>
+            <option value="CMC">ΔE CMC</option>
+            <option value="ITP">ΔE ITP</option>
+            <option value="Jz">ΔE Jz</option>
+          </select>
+        </div>
       </div>
       
       <div class="visualization-grid">
@@ -331,7 +332,6 @@ class ColormapVisualizer {
         <div class="viz-panel perceptual-delta">
           <h3>Perceptual Derivative (ΔE)</h3>
           <div id="perceptual-delta-plot" class="plot-container"></div>
-          <div class="stats" id="perceptual-stats"></div>
         </div>
         
         <div class="viz-panel grayscale-strip">
@@ -342,26 +342,15 @@ class ColormapVisualizer {
         <div class="viz-panel lightness-delta">
           <h3>Lightness Derivative (ΔL*)</h3>
           <div id="lightness-delta-plot" class="plot-container"></div>
-          <div class="stats" id="lightness-stats"></div>
-        </div>
-        
-        <div class="viz-panel deuteranomaly">
-          <h3>Deuteranomaly (50%)</h3>
-          <canvas id="deuteranomaly-canvas"></canvas>
         </div>
         
         <div class="viz-panel deuteranopia">
-          <h3>Deuteranopia (100%)</h3>
+          <h3>Deuteranopia</h3>
           <canvas id="deuteranopia-canvas"></canvas>
         </div>
         
-        <div class="viz-panel protanomaly">
-          <h3>Protanomaly (50%)</h3>
-          <canvas id="protanomaly-canvas"></canvas>
-        </div>
-        
         <div class="viz-panel protanopia">
-          <h3>Protanopia (100%)</h3>
+          <h3>Protanopia</h3>
           <canvas id="protanopia-canvas"></canvas>
         </div>
         
@@ -376,17 +365,17 @@ class ColormapVisualizer {
         </div>
         
         <div class="viz-panel test-image-1-cb">
-          <h3>Test Pattern (Deuteranopia)</h3>
+          <h3>Test Pattern (Grayscale)</h3>
           <canvas id="test-image-1-cb"></canvas>
         </div>
         
         <div class="viz-panel test-image-2">
-          <h3>Gradient Test</h3>
+          <h3>Test Pattern (Deuteranopia)</h3>
           <canvas id="test-image-2"></canvas>
         </div>
         
         <div class="viz-panel test-image-2-cb">
-          <h3>Gradient Test (Deuteranopia)</h3>
+          <h3>Test Pattern (Protanopia)</h3>
           <canvas id="test-image-2-cb"></canvas>
         </div>
         
@@ -469,7 +458,14 @@ class ColormapVisualizer {
     canvases.forEach(canvas => {
       const rect = canvas.parentElement!.getBoundingClientRect();
       canvas.width = rect.width - 16;
-      canvas.height = rect.height - 40;
+      
+      // Make colormap strips much thicker
+      if (canvas.id === 'colormap-canvas' || canvas.id === 'grayscale-canvas' || 
+          canvas.id === 'deuteranopia-canvas' || canvas.id === 'protanopia-canvas') {
+        canvas.height = Math.max(120, rect.height - 10); // Much thicker strips like reference image
+      } else {
+        canvas.height = rect.height - 40;
+      }
     });
 
     // Handle resize
@@ -500,38 +496,16 @@ class ColormapVisualizer {
     const perceptualPlot = document.getElementById('perceptual-delta-plot')!;
     drawLineChart(perceptualPlot, perceptualDeltas, `ΔE ${this.deltaEMethod}`);
 
-    // Update perceptual stats
-    const pStats = calculateStats(perceptualDeltas);
-    const pStatsEl = document.getElementById('perceptual-stats')!;
-    pStatsEl.innerHTML = `
-      Length: ${pStats.totalLength.toFixed(1)}<br>
-      RMS: ${pStats.rmsDeviation.toFixed(2)} (${(100 * pStats.rmsDeviation / pStats.totalLength).toFixed(1)}%)<br>
-      <small>Points: ${perceptualDeltas.length}</small>
-    `;
 
     // Calculate and draw lightness deltas
     const lightnessDeltas = calculateLightnessDeltas(colors);
     const lightnessPlot = document.getElementById('lightness-delta-plot')!;
     drawLineChart(lightnessPlot, lightnessDeltas, 'Lightness Derivative (ΔL*)');
 
-    // Update lightness stats
-    const lStats = calculateStats(lightnessDeltas);
-    const lStatsEl = document.getElementById('lightness-stats')!;
-    lStatsEl.innerHTML = `
-      Length: ${lStats.totalLength.toFixed(1)}<br>
-      RMS: ${lStats.rmsDeviation.toFixed(2)} (${(100 * lStats.rmsDeviation / lStats.totalLength).toFixed(1)}%)<br>
-      <small>Points: ${lightnessDeltas.length}</small>
-    `;
 
     // Draw color blindness simulations
-    const deuteranomalyCanvas = document.getElementById('deuteranomaly-canvas') as HTMLCanvasElement;
-    drawColorBlindSimulation(deuteranomalyCanvas, colors, 'deuteranopia');
-
     const deuteranopiaCanvas = document.getElementById('deuteranopia-canvas') as HTMLCanvasElement;
     drawColorBlindSimulation(deuteranopiaCanvas, colors, 'deuteranopia');
-
-    const protanomalyCanvas = document.getElementById('protanomaly-canvas') as HTMLCanvasElement;
-    drawColorBlindSimulation(protanomalyCanvas, colors, 'protanopia');
 
     const protanopiaCanvas = document.getElementById('protanopia-canvas') as HTMLCanvasElement;
     drawColorBlindSimulation(protanopiaCanvas, colors, 'protanopia');
@@ -552,105 +526,189 @@ class ColormapVisualizer {
     const perceptualPlot = document.getElementById('perceptual-delta-plot')!;
     drawLineChart(perceptualPlot, perceptualDeltas, `ΔE ${this.deltaEMethod}`);
 
-    // Update perceptual stats
-    const pStats = calculateStats(perceptualDeltas);
-    const pStatsEl = document.getElementById('perceptual-stats')!;
-    pStatsEl.innerHTML = `
-      Length: ${pStats.totalLength.toFixed(1)}<br>
-      RMS: ${pStats.rmsDeviation.toFixed(2)} (${(100 * pStats.rmsDeviation / pStats.totalLength).toFixed(1)}%)<br>
-      <small>Points: ${perceptualDeltas.length}</small>
-    `;
 
     // Note: Lightness deltas don't need updating since they don't depend on deltaE method
   }
 
-  private drawTestImages() {
-    // Test pattern 1
-    const testCanvas1 = document.getElementById('test-image-1') as HTMLCanvasElement;
-    const ctx1 = testCanvas1.getContext('2d')!;
-    const testImage1 = generateTestPattern(testCanvas1.width, testCanvas1.height);
-    const coloredImage1 = applyColormapToImage(testImage1, this.currentColormap);
-    ctx1.putImageData(coloredImage1, 0, 0);
+  private async drawTestImages() {
+    try {
+      // Load the official viscm test image
+      const viscmData = await loadViscmTestImage();
+      const viscmImageData = createImageDataFromViscm(viscmData);
 
-    // Test pattern 1 with color blindness
-    const testCanvas1CB = document.getElementById('test-image-1-cb') as HTMLCanvasElement;
-    const ctx1CB = testCanvas1CB.getContext('2d')!;
-    // Apply colormap then simulate color blindness
-    const imageData1CB = applyColormapToImage(testImage1, this.currentColormap);
-    // Simple simulation by modifying the image data
-    for (let i = 0; i < imageData1CB.data.length; i += 4) {
-      const r = imageData1CB.data[i];
-      const g = imageData1CB.data[i + 1];
-      const b = imageData1CB.data[i + 2];
-      // Simulate deuteranopia (simplified)
-      imageData1CB.data[i] = r * 0.625 + g * 0.375;
-      imageData1CB.data[i + 1] = r * 0.7 + g * 0.3;
-      imageData1CB.data[i + 2] = b;
+      // Test pattern in colormap (row 1, left)
+      const testCanvas1 = document.getElementById('test-image-1') as HTMLCanvasElement;
+      if (testCanvas1) {
+        const ctx1 = testCanvas1.getContext('2d')!;
+        // Scale the viscm image to fit canvas
+        const scaledImageData = this.scaleImageData(viscmImageData, testCanvas1.width, testCanvas1.height);
+        const coloredImage1 = applyColormapToImage(scaledImageData, this.currentColormap);
+        ctx1.putImageData(coloredImage1, 0, 0);
+      }
+
+      // Test pattern in grayscale (row 1, right)
+      const testCanvas1CB = document.getElementById('test-image-1-cb') as HTMLCanvasElement;
+      if (testCanvas1CB) {
+        const ctx1CB = testCanvas1CB.getContext('2d')!;
+        // Scale the viscm image to fit canvas and keep as grayscale
+        const scaledImageData = this.scaleImageData(viscmImageData, testCanvas1CB.width, testCanvas1CB.height);
+        ctx1CB.putImageData(scaledImageData, 0, 0);
+      }
+    } catch (error) {
+      console.error('Failed to load viscm test image, falling back to generated pattern:', error);
+      // Fallback to generated pattern
+      this.drawGeneratedTestImages();
     }
-    ctx1CB.putImageData(imageData1CB, 0, 0);
 
-    // Create gradient test
-    const testCanvas2 = document.getElementById('test-image-2') as HTMLCanvasElement;
-    const ctx2 = testCanvas2.getContext('2d')!;
-    const gradient = ctx2.createLinearGradient(0, 0, testCanvas2.width, 0);
-    for (let i = 0; i <= 10; i++) {
-      const t = i / 10;
-      const idx = Math.floor(t * (this.currentColormap.colors.length - 1));
-      const color = this.currentColormap.colors[idx];
-      gradient.addColorStop(t, `rgb(${color.r * 255}, ${color.g * 255}, ${color.b * 255})`);
+    try {
+      // Load the official viscm test image for rows 2-4
+      const viscmData = await loadViscmTestImage();
+      const viscmImageData = createImageDataFromViscm(viscmData);
+
+      // Test pattern with deuteranopia simulation (row 2, left)
+      const testCanvas2 = document.getElementById('test-image-2') as HTMLCanvasElement;
+      if (testCanvas2) {
+        const ctx2 = testCanvas2.getContext('2d')!;
+        const scaledImageData = this.scaleImageData(viscmImageData, testCanvas2.width, testCanvas2.height);
+        const coloredImage2 = applyColormapToImage(scaledImageData, this.currentColormap);
+        
+        // First draw the colored image
+        ctx2.putImageData(coloredImage2, 0, 0);
+        
+        // Then apply proper deuteranopia simulation
+        const imageData = ctx2.getImageData(0, 0, testCanvas2.width, testCanvas2.height);
+        const simulatedData = new ImageData(testCanvas2.width, testCanvas2.height);
+        
+        for (let i = 0; i < imageData.data.length; i += 4) {
+          const rgb = {
+            r: imageData.data[i],
+            g: imageData.data[i + 1], 
+            b: imageData.data[i + 2]
+          };
+          
+          const simulated = simulate(rgb, 'deuteranopia');
+          simulatedData.data[i] = simulated.r;
+          simulatedData.data[i + 1] = simulated.g;
+          simulatedData.data[i + 2] = simulated.b;
+          simulatedData.data[i + 3] = imageData.data[i + 3];
+        }
+        
+        ctx2.putImageData(simulatedData, 0, 0);
+      }
+
+      // Test pattern with protanopia simulation (row 2, right)
+      const testCanvas2CB = document.getElementById('test-image-2-cb') as HTMLCanvasElement;
+      if (testCanvas2CB) {
+        const ctx2CB = testCanvas2CB.getContext('2d')!;
+        const scaledImageData = this.scaleImageData(viscmImageData, testCanvas2CB.width, testCanvas2CB.height);
+        const coloredImage2 = applyColormapToImage(scaledImageData, this.currentColormap);
+        
+        // First draw the colored image
+        ctx2CB.putImageData(coloredImage2, 0, 0);
+        
+        // Then apply proper protanopia simulation
+        const imageData = ctx2CB.getImageData(0, 0, testCanvas2CB.width, testCanvas2CB.height);
+        const simulatedData = new ImageData(testCanvas2CB.width, testCanvas2CB.height);
+        
+        for (let i = 0; i < imageData.data.length; i += 4) {
+          const rgb = {
+            r: imageData.data[i],
+            g: imageData.data[i + 1],
+            b: imageData.data[i + 2]
+          };
+          
+          const simulated = simulate(rgb, 'protanopia');
+          simulatedData.data[i] = simulated.r;
+          simulatedData.data[i + 1] = simulated.g;
+          simulatedData.data[i + 2] = simulated.b;
+          simulatedData.data[i + 3] = imageData.data[i + 3];
+        }
+        
+        ctx2CB.putImageData(simulatedData, 0, 0);
+      }
+
+      // Use viscm test image for sine wave patterns too (rows 3-4)
+      const testCanvas3 = document.getElementById('test-image-3') as HTMLCanvasElement;
+      if (testCanvas3) {
+        const ctx3 = testCanvas3.getContext('2d')!;
+        const scaledImageData = this.scaleImageData(viscmImageData, testCanvas3.width, testCanvas3.height);
+        const coloredImage3 = applyColormapToImage(scaledImageData, this.currentColormap);
+        ctx3.putImageData(coloredImage3, 0, 0);
+      }
+
+      // Sine wave with color blindness
+      const testCanvas3CB = document.getElementById('test-image-3-cb') as HTMLCanvasElement;
+      if (testCanvas3CB) {
+        const ctx3CB = testCanvas3CB.getContext('2d')!;
+        const scaledImageData = this.scaleImageData(viscmImageData, testCanvas3CB.width, testCanvas3CB.height);
+        const coloredImage3 = applyColormapToImage(scaledImageData, this.currentColormap);
+        
+        // First draw the colored image
+        ctx3CB.putImageData(coloredImage3, 0, 0);
+        
+        // Apply colorblind simulation
+        const imageData = ctx3CB.getImageData(0, 0, testCanvas3CB.width, testCanvas3CB.height);
+        const simulatedData3 = new ImageData(testCanvas3CB.width, testCanvas3CB.height);
+        for (let i = 0; i < imageData.data.length; i += 4) {
+          const rgb = {
+            r: imageData.data[i],
+            g: imageData.data[i + 1],
+            b: imageData.data[i + 2]
+          };
+          
+          const simulated = simulate(rgb, 'deuteranopia');
+          simulatedData3.data[i] = simulated.r;
+          simulatedData3.data[i + 1] = simulated.g;
+          simulatedData3.data[i + 2] = simulated.b;
+          simulatedData3.data[i + 3] = imageData.data[i + 3];
+        }
+        
+        ctx3CB.putImageData(simulatedData3, 0, 0);
+      }
+    } catch (error) {
+      console.error('Failed to load viscm test image for colorblind tests, using generated patterns:', error);
+      // Fallback to generated patterns for these tests
     }
-    ctx2.fillStyle = gradient;
-    ctx2.fillRect(0, 0, testCanvas2.width, testCanvas2.height);
+  }
 
-    // Gradient with color blindness
-    const testCanvas2CB = document.getElementById('test-image-2-cb') as HTMLCanvasElement;
-    const ctx2CB = testCanvas2CB.getContext('2d')!;
-    const imageData2 = ctx2.getImageData(0, 0, testCanvas2.width, testCanvas2.height);
-    for (let i = 0; i < imageData2.data.length; i += 4) {
-      const r = imageData2.data[i];
-      const g = imageData2.data[i + 1];
-      const b = imageData2.data[i + 2];
-      imageData2.data[i] = r * 0.625 + g * 0.375;
-      imageData2.data[i + 1] = r * 0.7 + g * 0.3;
-      imageData2.data[i + 2] = b;
-    }
-    ctx2CB.putImageData(imageData2, 0, 0);
+  private scaleImageData(sourceData: ImageData, targetWidth: number, targetHeight: number): ImageData {
+    const scaledData = new ImageData(targetWidth, targetHeight);
+    const scaleX = sourceData.width / targetWidth;
+    const scaleY = sourceData.height / targetHeight;
 
-    // Create sine wave pattern
-    const testCanvas3 = document.getElementById('test-image-3') as HTMLCanvasElement;
-    const ctx3 = testCanvas3.getContext('2d')!;
-    const imageData3 = ctx3.createImageData(testCanvas3.width, testCanvas3.height);
-    for (let y = 0; y < testCanvas3.height; y++) {
-      for (let x = 0; x < testCanvas3.width; x++) {
-        const value = (Math.sin(x * 0.05) * Math.cos(y * 0.05) + 1) / 2;
-        const idx = Math.floor(value * (this.currentColormap.colors.length - 1));
-        const color = this.currentColormap.colors[idx];
-        const pixelIdx = (y * testCanvas3.width + x) * 4;
-        imageData3.data[pixelIdx] = color.r * 255;
-        imageData3.data[pixelIdx + 1] = color.g * 255;
-        imageData3.data[pixelIdx + 2] = color.b * 255;
-        imageData3.data[pixelIdx + 3] = 255;
+    for (let y = 0; y < targetHeight; y++) {
+      for (let x = 0; x < targetWidth; x++) {
+        const sourceX = Math.floor(x * scaleX);
+        const sourceY = Math.floor(y * scaleY);
+        const sourceIndex = (sourceY * sourceData.width + sourceX) * 4;
+        const targetIndex = (y * targetWidth + x) * 4;
+
+        scaledData.data[targetIndex] = sourceData.data[sourceIndex];
+        scaledData.data[targetIndex + 1] = sourceData.data[sourceIndex + 1];
+        scaledData.data[targetIndex + 2] = sourceData.data[sourceIndex + 2];
+        scaledData.data[targetIndex + 3] = sourceData.data[sourceIndex + 3];
       }
     }
-    ctx3.putImageData(imageData3, 0, 0);
 
-    // Sine wave with color blindness
-    const testCanvas3CB = document.getElementById('test-image-3-cb') as HTMLCanvasElement;
-    const ctx3CB = testCanvas3CB.getContext('2d')!;
-    const imageData3CB = new ImageData(
-      new Uint8ClampedArray(imageData3.data),
-      imageData3.width,
-      imageData3.height
-    );
-    for (let i = 0; i < imageData3CB.data.length; i += 4) {
-      const r = imageData3CB.data[i];
-      const g = imageData3CB.data[i + 1];
-      const b = imageData3CB.data[i + 2];
-      imageData3CB.data[i] = r * 0.625 + g * 0.375;
-      imageData3CB.data[i + 1] = r * 0.7 + g * 0.3;
-      imageData3CB.data[i + 2] = b;
+    return scaledData;
+  }
+
+  private drawGeneratedTestImages() {
+    // Fallback to generated test patterns
+    const testCanvas1 = document.getElementById('test-image-1') as HTMLCanvasElement;
+    if (testCanvas1) {
+      const ctx1 = testCanvas1.getContext('2d')!;
+      const testImage1 = generateTestPattern(testCanvas1.width, testCanvas1.height);
+      const coloredImage1 = applyColormapToImage(testImage1, this.currentColormap);
+      ctx1.putImageData(coloredImage1, 0, 0);
     }
-    ctx3CB.putImageData(imageData3CB, 0, 0);
+
+    const testCanvas1CB = document.getElementById('test-image-1-cb') as HTMLCanvasElement;
+    if (testCanvas1CB) {
+      const ctx1CB = testCanvas1CB.getContext('2d')!;
+      const testImage1 = generateTestPattern(testCanvas1CB.width, testCanvas1CB.height);
+      ctx1CB.putImageData(testImage1, 0, 0);
+    }
   }
 }
 
