@@ -19,73 +19,60 @@ export function drawColormapStrip(canvas: HTMLCanvasElement, colors: RGB[]) {
   }
 }
 
-export function drawLineChart(canvas: HTMLCanvasElement, values: number[], label?: string) {
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return;
+export function drawLineChart(container: HTMLElement, values: number[], title: string) {
+  const x = values.map((_, i) => i / (values.length - 1));
   
-  const width = canvas.width;
-  const height = canvas.height;
-  const padding = 20;
+  const trace = {
+    x: x,
+    y: values,
+    type: 'scatter',
+    mode: 'lines',
+    line: {
+      color: '#2166ac',
+      width: 2
+    },
+    name: title
+  };
   
-  ctx.clearRect(0, 0, width, height);
-  
-  // Draw axes
-  ctx.strokeStyle = '#ccc';
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(padding, height - padding);
-  ctx.lineTo(width - padding, height - padding);
-  ctx.moveTo(padding, padding);
-  ctx.lineTo(padding, height - padding);
-  ctx.stroke();
-  
-  // Calculate axis range with minimum extent
+  // Calculate reasonable y-axis range
   const minVal = Math.min(...values, 0);
   const maxVal = Math.max(...values, 0);
   const rawRange = maxVal - minVal;
   const minRange = Math.max(rawRange, Math.abs(maxVal) * 0.1, Math.abs(minVal) * 0.1, 1);
   
-  // Expand range symmetrically around center for better visualization
   const center = (maxVal + minVal) / 2;
   const halfRange = minRange / 2;
-  const adjustedMinVal = center - halfRange;
-  const adjustedMaxVal = center + halfRange;
+  const yMin = center - halfRange;
+  const yMax = center + halfRange;
   
-  // Draw zero line
-  const range = adjustedMaxVal - adjustedMinVal;
-  const zeroY = height - padding - ((-adjustedMinVal / range) * (height - 2 * padding));
-  ctx.strokeStyle = '#999';
-  ctx.setLineDash([5, 5]);
-  ctx.beginPath();
-  ctx.moveTo(padding, zeroY);
-  ctx.lineTo(width - padding, zeroY);
-  ctx.stroke();
-  ctx.setLineDash([]);
+  const layout = {
+    xaxis: {
+      title: 'Position',
+      range: [0, 1],
+      showgrid: true,
+      zeroline: false
+    },
+    yaxis: {
+      title: title,
+      range: [yMin, yMax],
+      showgrid: true,
+      zeroline: true,
+      zerolinecolor: '#999',
+      zerolinewidth: 1
+    },
+    margin: { l: 50, r: 20, t: 20, b: 40 },
+    paper_bgcolor: 'rgba(0,0,0,0)',
+    plot_bgcolor: 'rgba(0,0,0,0)',
+    font: { size: 10 },
+    showlegend: false
+  };
   
-  // Draw the line
-  ctx.strokeStyle = '#2166ac';
-  ctx.lineWidth = 2;
-  ctx.beginPath();
+  const config = {
+    responsive: true,
+    displayModeBar: false
+  };
   
-  for (let i = 0; i < values.length; i++) {
-    const x = padding + (i / (values.length - 1)) * (width - 2 * padding);
-    const y = height - padding - ((values[i] - adjustedMinVal) / range) * (height - 2 * padding);
-    
-    if (i === 0) {
-      ctx.moveTo(x, y);
-    } else {
-      ctx.lineTo(x, y);
-    }
-  }
-  
-  ctx.stroke();
-  
-  // Draw label if provided
-  if (label) {
-    ctx.fillStyle = '#666';
-    ctx.font = '12px sans-serif';
-    ctx.fillText(label, padding + 5, padding - 5);
-  }
+  Plotly.newPlot(container, [trace], layout, config);
 }
 
 export function drawColorBlindSimulation(

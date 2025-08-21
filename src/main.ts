@@ -45,7 +45,7 @@ class ColormapVisualizer {
         
         <div class="viz-panel perceptual-delta">
           <h3>Perceptual Derivative (ΔE)</h3>
-          <canvas id="perceptual-delta-canvas"></canvas>
+          <div id="perceptual-delta-plot" class="plot-container"></div>
           <div class="stats" id="perceptual-stats"></div>
         </div>
         
@@ -56,7 +56,7 @@ class ColormapVisualizer {
         
         <div class="viz-panel lightness-delta">
           <h3>Lightness Derivative (ΔL*)</h3>
-          <canvas id="lightness-delta-canvas"></canvas>
+          <div id="lightness-delta-plot" class="plot-container"></div>
           <div class="stats" id="lightness-stats"></div>
         </div>
         
@@ -165,8 +165,8 @@ class ColormapVisualizer {
     
     // Calculate and draw perceptual deltas
     const perceptualDeltas = calculatePerceptualDeltas(colors);
-    const perceptualCanvas = document.getElementById('perceptual-delta-canvas') as HTMLCanvasElement;
-    drawLineChart(perceptualCanvas, perceptualDeltas);
+    const perceptualPlot = document.getElementById('perceptual-delta-plot')!;
+    drawLineChart(perceptualPlot, perceptualDeltas, 'ΔE');
     
     // Update perceptual stats
     const pStats = calculateStats(perceptualDeltas);
@@ -178,8 +178,8 @@ class ColormapVisualizer {
     
     // Calculate and draw lightness deltas
     const lightnessDeltas = calculateLightnessDeltas(colors);
-    const lightnessCanvas = document.getElementById('lightness-delta-canvas') as HTMLCanvasElement;
-    drawLineChart(lightnessCanvas, lightnessDeltas);
+    const lightnessPlot = document.getElementById('lightness-delta-plot')!;
+    drawLineChart(lightnessPlot, lightnessDeltas, 'ΔL*');
     
     // Update lightness stats
     const lStats = calculateStats(lightnessDeltas);
