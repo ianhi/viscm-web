@@ -36,24 +36,36 @@ export function drawLineChart(container: HTMLElement, values: number[], title: s
     name: title
   };
   
+  // Check if mobile viewport
+  const isMobile = window.innerWidth <= 768;
+  
   const layout = {
     xaxis: {
       title: 'Position',
       range: [0, 1],
       showgrid: true,
-      zeroline: false
+      zeroline: false,
+      titlefont: { size: isMobile ? 10 : 12 },
+      tickfont: { size: isMobile ? 8 : 10 }
     },
     yaxis: {
       title: title,
       showgrid: true,
       zeroline: true,
       zerolinecolor: '#999',
-      zerolinewidth: 1
+      zerolinewidth: 1,
+      titlefont: { size: isMobile ? 10 : 12 },
+      tickfont: { size: isMobile ? 8 : 10 }
     },
-    margin: { l: 40, r: 10, t: 10, b: 30 },
+    margin: { 
+      l: isMobile ? 35 : 40, 
+      r: isMobile ? 5 : 10, 
+      t: isMobile ? 5 : 10, 
+      b: isMobile ? 25 : 30 
+    },
     paper_bgcolor: 'rgba(0,0,0,0)',
     plot_bgcolor: 'rgba(0,0,0,0)',
-    font: { size: 10 },
+    font: { size: isMobile ? 9 : 10 },
     showlegend: false
   };
   
@@ -138,19 +150,28 @@ export function draw3DColorSpace(container: HTMLElement, colormap: ColorMap) {
   const adjustedYRange = ensureMinRange(yRange, minAxisRange);
   const adjustedZRange = ensureMinRange(zRange, minAxisRange);
   
+  // Check if mobile viewport
+  const isMobile = window.innerWidth <= 768;
+  
   const layout = {
     scene: {
       xaxis: { 
         title: 'a* (green-red)',
-        range: adjustedXRange
+        range: adjustedXRange,
+        titlefont: { size: isMobile ? 10 : 12 },
+        tickfont: { size: isMobile ? 8 : 10 }
       },
       yaxis: { 
         title: 'b* (blue-yellow)',
-        range: adjustedYRange
+        range: adjustedYRange,
+        titlefont: { size: isMobile ? 10 : 12 },
+        tickfont: { size: isMobile ? 8 : 10 }
       },
       zaxis: { 
         title: 'L* (lightness)',
-        range: adjustedZRange
+        range: adjustedZRange,
+        titlefont: { size: isMobile ? 10 : 12 },
+        tickfont: { size: isMobile ? 8 : 10 }
       },
       camera: {
         eye: { x: 1.5, y: 1.5, z: 1.5 }
@@ -158,7 +179,8 @@ export function draw3DColorSpace(container: HTMLElement, colormap: ColorMap) {
     },
     margin: { l: 0, r: 0, t: 0, b: 0 },
     paper_bgcolor: 'rgba(0,0,0,0)',
-    plot_bgcolor: 'rgba(0,0,0,0)'
+    plot_bgcolor: 'rgba(0,0,0,0)',
+    font: { size: isMobile ? 9 : 10 }
   };
   
   const config = {

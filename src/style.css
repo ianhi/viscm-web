@@ -407,6 +407,7 @@ body {
   margin-top: 1.5rem;
 }
 
+/* Tablet layout */
 @media (max-width: 1200px) {
   .visualization-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -427,5 +428,191 @@ body {
   
   .modal-body {
     padding: 1rem;
+  }
+}
+
+/* Mobile layout */
+@media (max-width: 768px) {
+  #app {
+    padding: 0.5rem;
+  }
+
+  .header {
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    padding: 1rem 0;
+  }
+
+  .title-section {
+    position: static;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .header h1 {
+    font-size: 1.5rem;
+  }
+
+  .controls {
+    flex-direction: column;
+    gap: 0.75rem;
+    width: 100%;
+    max-width: 300px;
+  }
+
+  .controls select,
+  .about-button {
+    width: 100%;
+    padding: 0.75rem;
+    font-size: 1rem;
+    min-height: 44px; /* Touch-friendly size */
+  }
+
+  .visualization-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    max-width: none;
+  }
+
+  .viz-panel {
+    min-height: 250px;
+  }
+
+  .viz-panel h3 {
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  .panel-header h3 {
+    font-size: 1rem;
+  }
+
+  .panel-control {
+    font-size: 0.9rem;
+    padding: 0.5rem;
+    min-height: 40px;
+  }
+
+  /* Colormap and grayscale strips - compact on mobile */
+  .colormap-strip,
+  .grayscale-strip,
+  .deuteranopia,
+  .protanopia {
+    min-height: 50px;
+    max-height: 60px;
+  }
+
+  /* Test images get appropriate mobile sizing */
+  .test-image-1,
+  .test-image-1-cb,
+  .test-image-2, 
+  .test-image-2-cb,
+  .test-image-3,
+  .test-image-3-cb {
+    min-height: 200px;
+  }
+
+  /* Color space 3D gets more prominence on mobile */
+  .color-space-3d {
+    min-height: 300px;
+  }
+
+  /* Better mobile modal */
+  .modal-content {
+    width: 95%;
+    max-width: none;
+    margin: 1rem;
+    max-height: 90vh;
+  }
+
+  .modal-header {
+    padding: 1rem;
+  }
+
+  .modal-header h2 {
+    font-size: 1.25rem;
+  }
+
+  .modal-body {
+    padding: 1rem;
+    font-size: 0.95rem;
+  }
+}
+
+/* Small mobile optimization */
+@media (max-width: 480px) {
+  #app {
+    padding: 0.25rem;
+  }
+
+  .header {
+    padding: 0.75rem 0;
+  }
+
+  .header h1 {
+    font-size: 1.25rem;
+  }
+
+  .visualization-grid {
+    gap: 0.75rem;
+  }
+
+  .viz-panel {
+    padding: 0.75rem;
+    min-height: 200px;
+  }
+
+  /* Keep gradient strips very compact on small screens */
+  .colormap-strip,
+  .grayscale-strip,
+  .deuteranopia,
+  .protanopia {
+    min-height: 40px;
+    max-height: 50px;
+  }
+
+  .viz-panel h3 {
+    font-size: 0.9rem;
+  }
+
+  .panel-header h3 {
+    font-size: 0.9rem;
+  }
+
+  .colormap-strip h3,
+  .grayscale-strip h3,
+  .deuteranopia h3,
+  .protanopia h3 {
+    font-size: 0.65rem;
+    padding: 0.1rem 0.25rem;
+  }
+
+  .test-image-1 h3,
+  .test-image-1-cb h3,
+  .test-image-2 h3,
+  .test-image-2-cb h3,
+  .test-image-3 h3,
+  .test-image-3-cb h3 {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.4rem;
+  }
+
+  .modal-content {
+    margin: 0.5rem;
+    border-radius: 4px;
+  }
+
+  .modal-header {
+    padding: 0.75rem;
+  }
+
+  .modal-body {
+    padding: 0.75rem;
+    font-size: 0.9rem;
+  }
+
+  .modal-body h3 {
+    font-size: 1rem;
   }
 }
